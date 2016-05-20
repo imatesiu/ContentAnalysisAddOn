@@ -157,63 +157,65 @@ public final class ContentAnalysisAddOn extends WeakBase
             String paraText, Locale locale, ProofreadingResult paRes, int[] footnotePositions, int nSuggestedBehindEndOfSentencePosition) {
 
         try {
+            if (paraText.length() > 1) {
+                Client client = ClientBuilder.newClient();
+                WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
 
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
+                CollaborativeContentAnalysis cca = new CollaborativeContentAnalysis();
+                cca.setLanguage(this.getLanguage());
 
-            CollaborativeContentAnalysis cca = new CollaborativeContentAnalysis();
-            cca.setLanguage(this.getLanguage());
+                cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
+                cca.getCollaborativeContent().setContentplain(paraText);
 
-            cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
-            cca.getCollaborativeContent().setContentplain(paraText);
+                cca.setQualityCriteria(new QualityCriteria());
+                cca.getQualityCriteria().setCorrectness(true);
+                cca.getQualityCriteria().setSimplicity(true);
+                cca.getQualityCriteria().setContentClarity(true);
+                cca.getQualityCriteria().setNonAmbiguity(true);
+                cca.getQualityCriteria().setCompleteness(false);
+                cca.getQualityCriteria().setPresentationClarity(false);
 
-            cca.setQualityCriteria(new QualityCriteria());
-            cca.getQualityCriteria().setCorrectness(true);
-            cca.getQualityCriteria().setSimplicity(true);
-            cca.getQualityCriteria().setContentClarity(true);
-            cca.getQualityCriteria().setNonAmbiguity(true);
-            cca.getQualityCriteria().setCompleteness(false);
-            cca.getQualityCriteria().setPresentationClarity(false);
+                Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
+                //GenericEntity<JAXBElement<CollaborativeContentAnalysis>> gw = new GenericEntity<JAXBElement<CollaborativeContentAnalysis>>(cca){};
+                Response response = target.request(MediaType.APPLICATION_XML).post(entity);
 
-            Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
-            //GenericEntity<JAXBElement<CollaborativeContentAnalysis>> gw = new GenericEntity<JAXBElement<CollaborativeContentAnalysis>>(cca){};
-            Response response = target.request(MediaType.APPLICATION_XML).post(entity);
+                String id = response.readEntity(String.class);
 
-            String id = response.readEntity(String.class);
-            
-            client = ClientBuilder.newClient();
-		if(id==null){
-			id="1";
-		}
+                client = ClientBuilder.newClient();
+                if (id == null) {
+                    id = "1";
+                }
 
-		target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id+"/status");
-		String 	status ="";
-		while (!status.equals("OK")) {
+                target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id + "/status");
+                String status = "";
+                while (!status.equals("OK")) {
 
+                    status = target.request().get(String.class);
 
-			status = target.request().get(String.class);
+                    //this.setStatus(status);
+                    if (status.equals("ERROR")) {
+                        break;
+                    }
+                }
+                //log.trace("Status: "+status);
 
-			//this.setStatus(status);
-			if(status.equals("ERROR"))
-				break;
-		}
-		//log.trace("Status: "+status);
+                if (status.equals("OK")) {
 
-		if(status.equals("OK")){
-			
-			String ipAddress = null;
-			if (ipAddress == null) {
-			    
-			}
-			System.out.println("ipAddress:" + ipAddress);
-			
-			target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id);
-			Response annotatecontent =  target.request().header("X-FORWARDED-FOR", ipAddress).get();
-			AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {});
-			//this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
+                    String ipAddress = null;
+                    if (ipAddress == null) {
 
-		}
+                    }
+                    System.out.println("ipAddress:" + ipAddress);
 
+                    target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id);
+                    Response annotatecontent = target.request().header("X-FORWARDED-FOR", ipAddress).get();
+                    AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
+                    });
+                    //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
+
+                    System.out.println(res);
+                }
+            }
         } catch (Throwable t) {
 
             paRes.nBehindEndOfSentencePosition = paraText.length();
@@ -330,7 +332,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     }
 
     private String getLanguage() {
-       return "english"; //To change body of generated methods, choose Tools | Templates.
+        return "english"; //To change body of generated methods, choose Tools | Templates.
     }
 
 }
