@@ -1,6 +1,7 @@
 package cnr.isti;
 
 import cnr.isti.xml.data.QualityCriteria;
+import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalyses;
 import cnr.isti.xml.data.collaborative.CollaborativeContent;
 import cnr.isti.xml.data.collaborative.CollaborativeContentAnalysis;
 import com.sun.star.uno.UnoRuntime;
@@ -24,6 +25,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -179,6 +181,39 @@ public final class ContentAnalysisAddOn extends WeakBase
             Response response = target.request(MediaType.APPLICATION_XML).post(entity);
 
             String id = response.readEntity(String.class);
+            
+            client = ClientBuilder.newClient();
+		if(id==null){
+			id="1";
+		}
+
+		target = client.target("http://contanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id+"/status");
+		String 	status ="";
+		while (!status.equals("OK")) {
+
+
+			status = target.request().get(String.class);
+
+			//this.setStatus(status);
+			if(status.equals("ERROR"))
+				break;
+		}
+		//log.trace("Status: "+status);
+
+		if(status.equals("OK")){
+			
+			String ipAddress = null;
+			if (ipAddress == null) {
+			    
+			}
+			System.out.println("ipAddress:" + ipAddress);
+			
+			target = client.target("http://contanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id);
+			Response annotatecontent =  target.request().header("X-FORWARDED-FOR", ipAddress).get();
+			AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {});
+			//this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
+
+		}
 
         } catch (Throwable t) {
 
