@@ -6,24 +6,121 @@ import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.lib.uno.helper.WeakBase;
+import com.sun.star.linguistic2.ProofreadingResult;
+import com.sun.star.beans.PropertyValue;
+import com.sun.star.lang.Locale;
+import com.sun.star.lang.XInitialization;
+import com.sun.star.linguistic2.XLinguServiceEventBroadcaster;
+import com.sun.star.linguistic2.XLinguServiceEventListener;
+import com.sun.star.linguistic2.XProofreader;
+import com.sun.star.task.XJobExecutor;
+import java.util.ArrayList;
+import java.util.List;
+
+
 
 
 public final class ContentAnalysisAddOn extends WeakBase
    implements com.sun.star.frame.XDispatchProvider,
-              com.sun.star.frame.XDispatch,
-              com.sun.star.lang.XServiceInfo,
-              com.sun.star.lang.XInitialization
-{
+              com.sun.star.frame.XDispatch,  com.sun.star.lang.XInitialization,
+              com.sun.star.lang.XServiceInfo, XProofreader, XLinguServiceEventBroadcaster, XJobExecutor
+             {
     private final XComponentContext m_xContext;
     private com.sun.star.frame.XFrame m_xFrame;
     private static final String m_implementationName = ContentAnalysisAddOn.class.getName();
     private static final String[] m_serviceNames = {
+         "com.sun.star.linguistic2.Proofreader",
         "com.sun.star.frame.ProtocolHandler" };
+    
+    private final List<XLinguServiceEventListener> xEventListeners;
+    
+    
+     @Override
+	  public void trigger(String sEvent) {
+	    if (Thread.currentThread().getContextClassLoader() == null) {
+	      Thread.currentThread().setContextClassLoader(ContentAnalysisAddOn.class.getClassLoader());
+	    }
+	    /*if (!javaVersionOkay()) {
+	      return;
+	    }*/
+	    try {
+	      if ("configure".equals(sEvent)) {
+	      //  runOptionsDialog();
+	      } else if ("about".equals(sEvent)) {
+	       // AboutDialogThread aboutThread = new AboutDialogThread(MESSAGES);
+	      //  aboutThread.start();
+	      } else {
+	        System.err.println("Sorry, don't know what to do, sEvent = " + sEvent);
+	      }
+	    } catch (Throwable e) {
+	      
+	    }
+	  }
+    
+     @Override
+	  public final boolean addLinguServiceEventListener(XLinguServiceEventListener eventListener) {
+	    if (eventListener == null) {
+	      return false;
+	    }
+	    xEventListeners.add(eventListener);
+	    return true;
+	  }
 
+	  /**
+	   * Remove a listener from the event listeners list.
+	   * 
+	   * @param eventListener the listener to be removed
+	   * @return true if listener is non-null and has been removed, false otherwise
+	   */
+	  @Override
+	  public final boolean removeLinguServiceEventListener(XLinguServiceEventListener eventListener) {
+	    if (eventListener == null) {
+	      return false;
+	    }
+	    if (xEventListeners.contains(eventListener)) {
+	      xEventListeners.remove(eventListener);
+	      return true;
+	    }
+	    return false;
+	  }
+
+
+    public boolean isSpellChecker(){
+        return false;
+    }
+
+    public Locale[] getLocales(){
+        List<Locale> locales = new ArrayList<Locale>();
+        locales.add(new Locale("it-It", "", ""));
+        locales.add(new Locale("en-US", "", ""));
+        return locales.toArray(new Locale[locales.size()]);
+    }
+
+    public boolean hasLocale(Locale arg0){
+        return true;
+    }
+   
+    public void ignoreRule(String arg0, Locale arg1){
+    }
+
+    public void resetIgnoreRules(){
+    }
+    
+    
+  
+    public  ProofreadingResult doProofreading(String docID,
+	      String paraText, Locale locale, int startOfSentencePos,
+	      int nSuggestedBehindEndOfSentencePosition,
+	      PropertyValue[] propertyValues) {
+	    
+	    return null;
+	    
+	  }
 
     public ContentAnalysisAddOn( XComponentContext context )
     {
         m_xContext = context;
+        xEventListeners = new ArrayList<XLinguServiceEventListener>();
     };
 
     public static XSingleComponentFactory __getComponentFactory( String sImplementationName ) {
