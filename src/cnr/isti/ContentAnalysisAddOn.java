@@ -159,7 +159,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         try {
 
             Client client = ClientBuilder.newClient();
-            WebTarget target = client.target("http://contanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
+            WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
 
             CollaborativeContentAnalysis cca = new CollaborativeContentAnalysis();
             cca.setLanguage(this.getLanguage());
@@ -186,7 +186,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 			id="1";
 		}
 
-		target = client.target("http://contanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id+"/status");
+		target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id+"/status");
 		String 	status ="";
 		while (!status.equals("OK")) {
 
@@ -207,7 +207,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 			}
 			System.out.println("ipAddress:" + ipAddress);
 			
-			target = client.target("http://contanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id);
+			target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/"+id);
 			Response annotatecontent =  target.request().header("X-FORWARDED-FOR", ipAddress).get();
 			AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {});
 			//this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
