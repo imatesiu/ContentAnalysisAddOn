@@ -321,16 +321,16 @@ public final class ContentAnalysisAddOn extends WeakBase
         }
     }
 
-    private Object getId() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private int getId() {
+        return 1; //To change body of generated methods, choose Tools | Templates.
     }
 
     private String getTitle() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return "Not supported yet."; //To change body of generated methods, choose Tools | Templates.
     }
 
     private String getLanguage() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+       return "english"; //To change body of generated methods, choose Tools | Templates.
     }
 
 }
