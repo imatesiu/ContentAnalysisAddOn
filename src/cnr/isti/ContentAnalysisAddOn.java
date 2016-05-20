@@ -10,6 +10,7 @@ import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.Locale;
 import com.sun.star.lang.XInitialization;
+import com.sun.star.lang.XServiceDisplayName;
 import com.sun.star.linguistic2.XLinguServiceEventBroadcaster;
 import com.sun.star.linguistic2.XLinguServiceEventListener;
 import com.sun.star.linguistic2.XProofreader;
@@ -23,7 +24,7 @@ import java.util.List;
 public final class ContentAnalysisAddOn extends WeakBase
    implements com.sun.star.frame.XDispatchProvider,
               com.sun.star.frame.XDispatch,  com.sun.star.lang.XInitialization,
-              com.sun.star.lang.XServiceInfo, XProofreader, XLinguServiceEventBroadcaster, XJobExecutor
+              com.sun.star.lang.XServiceInfo, XProofreader, XLinguServiceEventBroadcaster, XServiceDisplayName, XJobExecutor
              {
     private final XComponentContext m_xContext;
     private com.sun.star.frame.XFrame m_xFrame;
@@ -34,6 +35,10 @@ public final class ContentAnalysisAddOn extends WeakBase
     
     private final List<XLinguServiceEventListener> xEventListeners;
     
+     @Override
+	  public String getServiceDisplayName(Locale locale) {
+	    return "LanguageCATool";
+	  }
     
      @Override
 	  public void trigger(String sEvent) {
@@ -112,9 +117,48 @@ public final class ContentAnalysisAddOn extends WeakBase
 	      String paraText, Locale locale, int startOfSentencePos,
 	      int nSuggestedBehindEndOfSentencePosition,
 	      PropertyValue[] propertyValues) {
+         ProofreadingResult paRes = new ProofreadingResult();
+	    try {
+	      paRes.nStartOfSentencePosition = startOfSentencePos;
+	      paRes.xProofreader = this;
+	      paRes.aLocale = locale;
+	      paRes.aDocumentIdentifier = docID;
+	      paRes.aText = paraText;
+	      paRes.aProperties = propertyValues;
+	      int[] footnotePositions = getPropertyValues("FootnotePositions", propertyValues);  // since LO 4.3
+	      return doGrammarCheckingInternal(paraText, locale, paRes, footnotePositions);
+	    } catch (Throwable t) {
+	      
+	      return paRes;
+	    }
 	    
-	    return null;
+	  }
+    
+     private int[] getPropertyValues(String propName, PropertyValue[] propertyValues) {
+	    for (PropertyValue propertyValue : propertyValues) {
+	      if (propName.equals(propertyValue.Name)) {
+	        if (propertyValue.Value instanceof int[]) {
+	          return (int[]) propertyValue.Value;
+	        } else {
+	          System.err.println("Not of expected type int[]: " + propertyValue.Name + ": " + propertyValue.Value.getClass());
+	        }
+	      }
+	    }
+	    return new int[]{};  // e.g. for LO/OO < 4.3 and the 'FootnotePositions' property
+	  }
+    
+    private synchronized ProofreadingResult doGrammarCheckingInternal(
+	      String paraText, Locale locale, ProofreadingResult paRes, int[] footnotePositions) {
+
+	   
+	      try {
+	       
+	      } catch (Throwable t) {
+	        
+	        paRes.nBehindEndOfSentencePosition = paraText.length();
+	      }
 	    
+	    return paRes;
 	  }
 
     public ContentAnalysisAddOn( XComponentContext context )
