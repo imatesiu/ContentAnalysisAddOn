@@ -165,8 +165,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             cca.setLanguage(this.getLanguage());
 
             cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
-            //cca.getCollaborativeContent().setContent(new eu.learnpad.ca.rest.data.Content());
-            //cca.getCollaborativeContent().setContentplain(getContent());
+            cca.getCollaborativeContent().setContentplain(paraText);
 
             cca.setQualityCriteria(new QualityCriteria());
             cca.getQualityCriteria().setCorrectness(true);
