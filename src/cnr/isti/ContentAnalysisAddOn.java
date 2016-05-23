@@ -238,7 +238,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             
              listanna.addAll(acca.getAnnotations());
         }
-        Collections.sort(listanna);
+        //Collections.sort(listanna);
         for(Annotation anna : listanna){
               errorList.add(createOOoError(anna));
         }
@@ -263,7 +263,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     // not all rules have short comments
     
     aError.aShortComment = aa.getType();
-   
+    
 
     int numSuggestions = 1;
     String[] allSuggestions = new String[numSuggestions];

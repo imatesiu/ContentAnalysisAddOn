@@ -35,8 +35,8 @@ class ErrorPositionComparator implements Comparator<SingleProofreadingError> {
     if (match2.aSuggestions.length == 0 && match1.aSuggestions.length > 0) {
       return -1;
     }
-    int error1pos = match1.nErrorStart;
-    int error2pos = match2.nErrorStart;
+    int error1pos = match1.nErrorStart+match1.nErrorLength;
+    int error2pos = match2.nErrorStart+match2.nErrorLength;
     if (error1pos > error2pos) {
       return 1;
     } else if (error1pos < error2pos) {
