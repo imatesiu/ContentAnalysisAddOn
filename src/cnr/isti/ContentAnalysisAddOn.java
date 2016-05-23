@@ -1,7 +1,9 @@
 package cnr.isti;
 
+import cnr.isti.xml.data.Annotation;
 import cnr.isti.xml.data.QualityCriteria;
 import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalyses;
+import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalysis;
 import cnr.isti.xml.data.collaborative.CollaborativeContent;
 import cnr.isti.xml.data.collaborative.CollaborativeContentAnalysis;
 import com.sun.star.uno.UnoRuntime;
@@ -15,11 +17,15 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.Locale;
 import com.sun.star.lang.XInitialization;
 import com.sun.star.lang.XServiceDisplayName;
+import com.sun.star.linguistic2.SingleProofreadingError;
 import com.sun.star.linguistic2.XLinguServiceEventBroadcaster;
 import com.sun.star.linguistic2.XLinguServiceEventListener;
 import com.sun.star.linguistic2.XProofreader;
 import com.sun.star.task.XJobExecutor;
+import com.sun.star.text.TextMarkupType;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -212,7 +218,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                     AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
                     });
                     //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
-
+                    fromCAtoProofreadingResult(res, paRes, paraText,footnotePositions);
                     System.out.println(res);
                 }
             }
@@ -223,6 +229,67 @@ public final class ContentAnalysisAddOn extends WeakBase
 
         return paRes;
     }
+    
+    private void fromCAtoProofreadingResult( AnnotatedCollaborativeContentAnalyses res, ProofreadingResult paRes, 
+            String paraText, int [] footnotePositions){
+        List<SingleProofreadingError> errorList = new ArrayList<SingleProofreadingError>();
+        List<Annotation> listanna = new ArrayList<Annotation>();
+        for (AnnotatedCollaborativeContentAnalysis acca : res.getAnnotateCollaborativeContentAnalysis()) {
+            
+             listanna.addAll(acca.getAnnotations());
+        }
+        Collections.sort(listanna);
+        for(Annotation anna : listanna){
+              errorList.add(createOOoError(anna));
+        }
+         if (!errorList.isEmpty()) {
+        SingleProofreadingError[] errorArray = errorList.toArray(new SingleProofreadingError[errorList.size()]);
+        Arrays.sort(errorArray, new ErrorPositionComparator());  
+        paRes.aErrors = errorArray;
+        }
+       
+    }
+    
+    
+    /**
+   * Creates a SingleGrammarError object for use in LO/OO.
+   */
+  private SingleProofreadingError createOOoError(Annotation aa) {
+    SingleProofreadingError aError = new SingleProofreadingError();
+    aError.nErrorType = TextMarkupType.PROOFREADING;
+    // the API currently has no support for formatting text in comments
+    aError.aFullComment = aa.getRecommendation().replaceAll("<suggestion>", "\"").replaceAll("</suggestion>", "\"")
+        .replaceAll("([\r]*\n)", " ");
+    // not all rules have short comments
+    
+    aError.aShortComment = aa.getType();
+   
+
+    int numSuggestions = 1;
+    String[] allSuggestions = new String[numSuggestions];
+    allSuggestions[0] = aa.getRecommendation();
+   
+    aError.aSuggestions = allSuggestions;
+    Integer startoff = aa.getstartNode_Offset();
+    Integer endoff = aa.getendNode_Offset();
+    aError.nErrorStart = startoff;
+    aError.nErrorLength = endoff - startoff;
+    aError.aRuleIdentifier = aa.getId().toString();
+    // LibreOffice since version 3.5 supports an URL that provides more
+    // information about the error,
+    // older version will simply ignore the property:
+  /*  if (ruleMatch.getRule().getUrl() != null) {
+      aError.aProperties = new PropertyValue[] { new PropertyValue(
+          "FullCommentURL", -1, ruleMatch.getRule().getUrl().toString(),
+          PropertyState.DIRECT_VALUE) };
+    } else {
+      aError.aProperties = new PropertyValue[0];
+    }*/
+    return aError;
+  }
+
+    
+    
 
     public ContentAnalysisAddOn(XComponentContext context) {
         m_xContext = context;
