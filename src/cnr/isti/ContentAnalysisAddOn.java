@@ -48,6 +48,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         "com.sun.star.frame.ProtocolHandler"};
 
     private final List<XLinguServiceEventListener> xEventListeners;
+    private boolean recheck;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -123,6 +124,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     }
 
     public void resetIgnoreRules() {
+        recheck = true;
     }
 
     public ProofreadingResult doProofreading(String docID,
@@ -264,6 +266,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     
     aError.aShortComment = aa.getType();
     
+    
 
     int numSuggestions = 1;
     String[] allSuggestions = new String[numSuggestions];
@@ -275,16 +278,17 @@ public final class ContentAnalysisAddOn extends WeakBase
     aError.nErrorStart = startoff;
     aError.nErrorLength = endoff - startoff;
     aError.aRuleIdentifier = aa.getId().toString();
+   
     // LibreOffice since version 3.5 supports an URL that provides more
     // information about the error,
     // older version will simply ignore the property:
-  /*  if (ruleMatch.getRule().getUrl() != null) {
-      aError.aProperties = new PropertyValue[] { new PropertyValue(
-          "FullCommentURL", -1, ruleMatch.getRule().getUrl().toString(),
-          PropertyState.DIRECT_VALUE) };
-    } else {
+   //if (ruleMatch.getRule().getUrl() != null) {
+   //   aError.aProperties = new PropertyValue[] { new PropertyValue(
+   //       "FullCommentURL", -1, ruleMatch.getRule().getUrl().toString(),
+   //      PropertyState.DIRECT_VALUE) };
+    //} else {
       aError.aProperties = new PropertyValue[0];
-    }*/
+    //}
     return aError;
   }
 
@@ -321,6 +325,8 @@ public final class ContentAnalysisAddOn extends WeakBase
             if (aURL.Path.compareTo("Command0") == 0) {
                 return this;
             }
+             if ( aURL.Path.compareTo("Command1") == 0 )
+                return this;
         }
         return null;
     }
@@ -346,6 +352,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         if (aURL.Protocol.compareTo("cnr.isti.contentanalysisaddon:") == 0) {
             if (aURL.Path.compareTo("Command0") == 0) {
                 // add your own code here
+                System.out.println(aURL.Path);
                 return;
             }
         }

@@ -31,10 +31,49 @@
             </prop>
             <prop oor:name="Title" oor:type="xs:string">
               <value/>
-              <value xml:lang="en">Check Test</value>
-              <value xml:lang="it">Check Test</value>
+              <value xml:lang="en">Config Content Analisys</value>
+              <value xml:lang="it">Configura Content Analisys</value>
             </prop>
           </node>
+          <node oor:name="m2" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+              <value>.uno:RecheckDocument</value>
+            </prop>
+            <prop oor:name="ImageIdentifier" oor:type="xs:string">
+              <value/>
+            </prop>
+            <prop oor:name="Target" oor:type="xs:string">
+              <value>_self</value>
+            </prop>
+            <prop oor:name="Context" oor:type="xs:string">
+              <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+            </prop>
+            <prop oor:name="Title" oor:type="xs:string">
+              <value/>
+              <value xml:lang="en">Recheck Text</value>
+               <value xml:lang="it">Recheck Text</value>
+            </prop>
+          </node>
+          <node oor:name="m3" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+              <value>cnr.isti.contentanalysisaddon:Command1</value>
+            </prop>
+            <prop oor:name="ImageIdentifier" oor:type="xs:string">
+              <value/>
+            </prop>
+            <prop oor:name="Target" oor:type="xs:string">
+              <value>_self</value>
+            </prop>
+            <prop oor:name="Context" oor:type="xs:string">
+              <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+            </prop>
+            <prop oor:name="Title" oor:type="xs:string">
+              <value/>
+              <value xml:lang="en">Create Report</value>
+               <value xml:lang="it">Crea  Report</value>
+            </prop>
+          </node>
+          
         </node>
       </node>
     </node>
@@ -59,10 +98,48 @@
         </prop>
         <prop oor:name="Title" oor:type="xs:string">
           <value/>
-          <value xml:lang="en">Check Test</value>
-          <value xml:lang="it">Check Test</value>
+          <value xml:lang="en">Config Content Analisys</value>
+          <value xml:lang="it">Configura Content Analisys</value>
         </prop>
       </node>
+      <node oor:name="m2" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+              <value>.uno:RecheckDocument</value>
+            </prop>
+            <prop oor:name="ImageIdentifier" oor:type="xs:string">
+              <value/>
+            </prop>
+            <prop oor:name="Target" oor:type="xs:string">
+              <value>_self</value>
+            </prop>
+            <prop oor:name="Context" oor:type="xs:string">
+              <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+            </prop>
+            <prop oor:name="Title" oor:type="xs:string">
+              <value/>
+              <value xml:lang="en">Recheck Text</value>
+               <value xml:lang="it">Recheck Text</value>
+            </prop>
+          </node>
+          <node oor:name="m3" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+              <value>cnr.isti.contentanalysisaddon:Command1</value>
+            </prop>
+            <prop oor:name="ImageIdentifier" oor:type="xs:string">
+              <value/>
+            </prop>
+            <prop oor:name="Target" oor:type="xs:string">
+              <value>_self</value>
+            </prop>
+            <prop oor:name="Context" oor:type="xs:string">
+              <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+            </prop>
+            <prop oor:name="Title" oor:type="xs:string">
+              <value/>
+              <value xml:lang="en">Create Report</value>
+               <value xml:lang="it">Crea  Report</value>
+            </prop>
+          </node>
         </node>
       </node>
     </node>
@@ -70,6 +147,25 @@
       <node oor:name="cnr.isti.contentanalysisaddon.command0.images" oor:op="replace">
         <prop oor:name="URL" oor:type="xs:string">
           <value>cnr.isti.contentanalysisaddon:Command0</value>
+        </prop>
+        <node oor:name="UserDefinedImages">
+          <prop oor:name="ImageSmallURL">
+            <value/>
+          </prop>
+          <prop oor:name="ImageBigURL">
+            <value/>
+          </prop>
+          <prop oor:name="ImageSmallHCURL">
+            <value/>
+          </prop>
+          <prop oor:name="ImageBigHCURL">
+            <value/>
+          </prop>
+        </node>
+      </node>
+      <node oor:name="cnr.isti.contentanalysisaddon.command1.images" oor:op="replace">
+        <prop oor:name="URL" oor:type="xs:string">
+          <value>cnr.isti.contentanalysisaddon.command0:Command1</value>
         </prop>
         <node oor:name="UserDefinedImages">
           <prop oor:name="ImageSmallURL">
