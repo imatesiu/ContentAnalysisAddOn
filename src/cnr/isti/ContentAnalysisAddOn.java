@@ -49,6 +49,9 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     private final List<XLinguServiceEventListener> xEventListeners;
     private boolean recheck;
+    
+    private QualityCriteria qc;
+    
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -175,13 +178,8 @@ public final class ContentAnalysisAddOn extends WeakBase
                 cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
                 cca.getCollaborativeContent().setContentplain(paraText);
 
-                cca.setQualityCriteria(new QualityCriteria());
-                cca.getQualityCriteria().setCorrectness(true);
-                cca.getQualityCriteria().setSimplicity(true);
-                cca.getQualityCriteria().setContentClarity(true);
-                cca.getQualityCriteria().setNonAmbiguity(true);
-                cca.getQualityCriteria().setCompleteness(false);
-                cca.getQualityCriteria().setPresentationClarity(false);
+                cca.setQualityCriteria(qc);
+                
 
                 Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
                 //GenericEntity<JAXBElement<CollaborativeContentAnalysis>> gw = new GenericEntity<JAXBElement<CollaborativeContentAnalysis>>(cca){};
@@ -298,6 +296,12 @@ public final class ContentAnalysisAddOn extends WeakBase
     public ContentAnalysisAddOn(XComponentContext context) {
         m_xContext = context;
         xEventListeners = new ArrayList<XLinguServiceEventListener>();
+        qc = new QualityCriteria();
+        qc.setSimplicity(true);
+        qc.setContentClarity(true);
+        qc.setNonAmbiguity(true);
+        qc.setCompleteness(false);
+        qc.setPresentationClarity(false);
     }
 
     ;
@@ -322,10 +326,13 @@ public final class ContentAnalysisAddOn extends WeakBase
             String sTargetFrameName,
             int iSearchFlags) {
         if (aURL.Protocol.compareTo("cnr.isti.contentanalysisaddon:") == 0) {
-            if (aURL.Path.compareTo("Command0") == 0) {
+            if (aURL.Path.compareTo("Config") == 0) {
                 return this;
             }
              if ( aURL.Path.compareTo("Command1") == 0 )
+                return this;
+             
+             if ( aURL.Path.compareTo("About") == 0 )
                 return this;
         }
         return null;
@@ -350,9 +357,10 @@ public final class ContentAnalysisAddOn extends WeakBase
     public void dispatch(com.sun.star.util.URL aURL,
             com.sun.star.beans.PropertyValue[] aArguments) {
         if (aURL.Protocol.compareTo("cnr.isti.contentanalysisaddon:") == 0) {
-            if (aURL.Path.compareTo("Command0") == 0) {
+            if (aURL.Path.compareTo("Config") == 0) {
                 // add your own code here
                 System.out.println(aURL.Path);
+                
                 return;
             }
         }
