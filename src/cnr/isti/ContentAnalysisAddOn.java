@@ -6,6 +6,17 @@ import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalyses;
 import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalysis;
 import cnr.isti.xml.data.collaborative.CollaborativeContent;
 import cnr.isti.xml.data.collaborative.CollaborativeContentAnalysis;
+import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.PushButtonType;
+import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
+import com.sun.star.awt.XControl;
+import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XControlModel;
+import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XFixedText;
+import com.sun.star.awt.XToolkit;
+import com.sun.star.awt.XWindow;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.lib.uno.helper.Factory;
@@ -14,8 +25,14 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.Locale;
+import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XInitialization;
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.lang.XServiceDisplayName;
 import com.sun.star.linguistic2.SingleProofreadingError;
 import com.sun.star.linguistic2.XLinguServiceEventBroadcaster;
@@ -23,6 +40,7 @@ import com.sun.star.linguistic2.XLinguServiceEventListener;
 import com.sun.star.linguistic2.XProofreader;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.text.TextMarkupType;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Arrays;
@@ -47,11 +65,12 @@ public final class ContentAnalysisAddOn extends WeakBase
         "com.sun.star.linguistic2.Proofreader",
         "com.sun.star.frame.ProtocolHandler"};
 
+    private XNameContainer xNameCont = null;
+
     private final List<XLinguServiceEventListener> xEventListeners;
     private boolean recheck;
-    
+
     private QualityCriteria qc;
-    
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -179,7 +198,6 @@ public final class ContentAnalysisAddOn extends WeakBase
                 cca.getCollaborativeContent().setContentplain(paraText);
 
                 cca.setQualityCriteria(qc);
-                
 
                 Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
                 //GenericEntity<JAXBElement<CollaborativeContentAnalysis>> gw = new GenericEntity<JAXBElement<CollaborativeContentAnalysis>>(cca){};
@@ -218,7 +236,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                     AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
                     });
                     //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
-                    fromCAtoProofreadingResult(res, paRes, paraText,footnotePositions);
+                    fromCAtoProofreadingResult(res, paRes, paraText, footnotePositions);
                     System.out.println(res);
                 }
             }
@@ -229,69 +247,63 @@ public final class ContentAnalysisAddOn extends WeakBase
 
         return paRes;
     }
-    
-    private void fromCAtoProofreadingResult( AnnotatedCollaborativeContentAnalyses res, ProofreadingResult paRes, 
-            String paraText, int [] footnotePositions){
+
+    private void fromCAtoProofreadingResult(AnnotatedCollaborativeContentAnalyses res, ProofreadingResult paRes,
+            String paraText, int[] footnotePositions) {
         List<SingleProofreadingError> errorList = new ArrayList<SingleProofreadingError>();
         List<Annotation> listanna = new ArrayList<Annotation>();
         for (AnnotatedCollaborativeContentAnalysis acca : res.getAnnotateCollaborativeContentAnalysis()) {
-            
-             listanna.addAll(acca.getAnnotations());
+
+            listanna.addAll(acca.getAnnotations());
         }
         //Collections.sort(listanna);
-        for(Annotation anna : listanna){
-              errorList.add(createOOoError(anna));
+        for (Annotation anna : listanna) {
+            errorList.add(createOOoError(anna));
         }
-         if (!errorList.isEmpty()) {
-        SingleProofreadingError[] errorArray = errorList.toArray(new SingleProofreadingError[errorList.size()]);
-        Arrays.sort(errorArray, new ErrorPositionComparator());  
-        paRes.aErrors = errorArray;
+        if (!errorList.isEmpty()) {
+            SingleProofreadingError[] errorArray = errorList.toArray(new SingleProofreadingError[errorList.size()]);
+            Arrays.sort(errorArray, new ErrorPositionComparator());
+            paRes.aErrors = errorArray;
         }
-       
+
     }
-    
-    
+
     /**
-   * Creates a SingleGrammarError object for use in LO/OO.
-   */
-  private SingleProofreadingError createOOoError(Annotation aa) {
-    SingleProofreadingError aError = new SingleProofreadingError();
-    aError.nErrorType = TextMarkupType.PROOFREADING;
-    // the API currently has no support for formatting text in comments
-    aError.aFullComment = aa.getRecommendation().replaceAll("<suggestion>", "\"").replaceAll("</suggestion>", "\"")
-        .replaceAll("([\r]*\n)", " ");
-    // not all rules have short comments
-    
-    aError.aShortComment = aa.getType();
-    
-    
+     * Creates a SingleGrammarError object for use in LO/OO.
+     */
+    private SingleProofreadingError createOOoError(Annotation aa) {
+        SingleProofreadingError aError = new SingleProofreadingError();
+        aError.nErrorType = TextMarkupType.PROOFREADING;
+        // the API currently has no support for formatting text in comments
+        aError.aFullComment = aa.getRecommendation().replaceAll("<suggestion>", "\"").replaceAll("</suggestion>", "\"")
+                .replaceAll("([\r]*\n)", " ");
+        // not all rules have short comments
 
-    int numSuggestions = 1;
-    String[] allSuggestions = new String[numSuggestions];
-    allSuggestions[0] = aa.getRecommendation();
-   
-    aError.aSuggestions = allSuggestions;
-    Integer startoff = aa.getstartNode_Offset();
-    Integer endoff = aa.getendNode_Offset();
-    aError.nErrorStart = startoff;
-    aError.nErrorLength = endoff - startoff;
-    aError.aRuleIdentifier = aa.getId().toString();
-   
-    // LibreOffice since version 3.5 supports an URL that provides more
-    // information about the error,
-    // older version will simply ignore the property:
-   //if (ruleMatch.getRule().getUrl() != null) {
-   //   aError.aProperties = new PropertyValue[] { new PropertyValue(
-   //       "FullCommentURL", -1, ruleMatch.getRule().getUrl().toString(),
-   //      PropertyState.DIRECT_VALUE) };
-    //} else {
-      aError.aProperties = new PropertyValue[0];
-    //}
-    return aError;
-  }
+        aError.aShortComment = aa.getType();
 
-    
-    
+        int numSuggestions = 1;
+        String[] allSuggestions = new String[numSuggestions];
+        allSuggestions[0] = aa.getRecommendation();
+
+        aError.aSuggestions = allSuggestions;
+        Integer startoff = aa.getstartNode_Offset();
+        Integer endoff = aa.getendNode_Offset();
+        aError.nErrorStart = startoff;
+        aError.nErrorLength = endoff - startoff;
+        aError.aRuleIdentifier = aa.getId().toString();
+
+        // LibreOffice since version 3.5 supports an URL that provides more
+        // information about the error,
+        // older version will simply ignore the property:
+        //if (ruleMatch.getRule().getUrl() != null) {
+        //   aError.aProperties = new PropertyValue[] { new PropertyValue(
+        //       "FullCommentURL", -1, ruleMatch.getRule().getUrl().toString(),
+        //      PropertyState.DIRECT_VALUE) };
+        //} else {
+        aError.aProperties = new PropertyValue[0];
+        //}
+        return aError;
+    }
 
     public ContentAnalysisAddOn(XComponentContext context) {
         m_xContext = context;
@@ -329,11 +341,13 @@ public final class ContentAnalysisAddOn extends WeakBase
             if (aURL.Path.compareTo("Config") == 0) {
                 return this;
             }
-             if ( aURL.Path.compareTo("Command1") == 0 )
+            if (aURL.Path.compareTo("Command1") == 0) {
                 return this;
-             
-             if ( aURL.Path.compareTo("About") == 0 )
+            }
+
+            if (aURL.Path.compareTo("About") == 0) {
                 return this;
+            }
         }
         return null;
     }
@@ -360,15 +374,164 @@ public final class ContentAnalysisAddOn extends WeakBase
             if (aURL.Path.compareTo("Config") == 0) {
                 // add your own code here
                 System.out.println(aURL.Path);
-                
+                try {
+                    createDialog();
+                } catch (Exception e) {
+                    throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
+                }
                 return;
             }
         }
     }
 
+    private void createDialog() throws com.sun.star.uno.Exception {
+        // get the service manager from the component context
+        XMultiComponentFactory xMultiComponentFactory = m_xContext.getServiceManager();
+        // create the dialog model and set the properties
+        Object dialogModel = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialogModel", m_xContext);
+        XPropertySet xPSetDialog = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, dialogModel);
+        xPSetDialog.setPropertyValue("PositionX", new Integer(100));
+        xPSetDialog.setPropertyValue("PositionY", new Integer(100));
+        xPSetDialog.setPropertyValue("Width", new Integer(150));
+        xPSetDialog.setPropertyValue("Height", new Integer(100));
+        xPSetDialog.setPropertyValue("Title", new String("Runtime Dialog CA Configuration"));
+        // get the service manager from the dialog model
+        XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                XMultiServiceFactory.class, dialogModel);
+
+        // create the button model and set the properties
+        Object buttonModel = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet xPSetButton = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, buttonModel);
+        xPSetButton.setPropertyValue("PositionX", new Integer(90));
+        xPSetButton.setPropertyValue("PositionY", new Integer(80));
+        xPSetButton.setPropertyValue("Width", new Integer(50));
+        xPSetButton.setPropertyValue("Height", new Integer(14));
+        xPSetButton.setPropertyValue("Name", "INVIO");
+        xPSetButton.setPropertyValue("TabIndex", new Short((short) 0));
+        xPSetButton.setPropertyValue("Label", new String("OK"));
+
+        Object buttonModel2 = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet xPSetButton2 = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, buttonModel2);
+        xPSetButton2.setPropertyValue("PositionX", new Integer(5));
+        xPSetButton2.setPropertyValue("PositionY", new Integer(80));
+        xPSetButton2.setPropertyValue("Width", new Integer(50));
+        xPSetButton2.setPropertyValue("Height", new Integer(14));
+        xPSetButton2.setPropertyValue("Name", "Cancel");
+        xPSetButton2.setPropertyValue("TabIndex", new Short((short) 0));
+        xPSetButton2.setPropertyValue("Label", new String("Cancel"));
+        xPSetButton2.setPropertyValue("PushButtonType", new Short((short) PushButtonType.CANCEL_value));
+
+        // create the label model and set the properties
+        Object labelModel = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlFixedTextModel");
+        XPropertySet xPSetLabel = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, labelModel);
+        xPSetLabel.setPropertyValue("PositionX", new Integer(5));
+        xPSetLabel.setPropertyValue("PositionY", new Integer(5));
+        xPSetLabel.setPropertyValue("Width", new Integer(100));
+        xPSetLabel.setPropertyValue("Height", new Integer(14));
+        xPSetLabel.setPropertyValue("Name", "LABEL");
+        xPSetLabel.setPropertyValue("TabIndex", new Short((short) 1));
+        xPSetLabel.setPropertyValue("Label", "Select Quality Criteria:");
+        // insert the control models into the dialog model
+        XNameContainer xNameCont = (XNameContainer) UnoRuntime.queryInterface(
+                XNameContainer.class, dialogModel);
+        this.xNameCont = xNameCont;
+        xNameCont.insertByName("INVIO", buttonModel);
+        xNameCont.insertByName("Cancel", buttonModel2);
+        xNameCont.insertByName("Label", labelModel);
+
+        Object checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        XPropertySet xpsCHKProperties = createAWTControl(checkboxModel, "Completeness", "Completeness",
+                new Rectangle(10, 20, 150, 12));
+        xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        
+         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        xpsCHKProperties = createAWTControl(checkboxModel, "Simplicity", "Simplicity",
+                new Rectangle(10, 35, 150, 12));
+        xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        
+         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+         xpsCHKProperties = createAWTControl(checkboxModel, "NonAmbiguity", "Non Ambiguity",
+                new Rectangle(10, 50, 150, 12));
+         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+
+         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+         xpsCHKProperties = createAWTControl(checkboxModel, "ContentClarity", "Content Clarity",
+                new Rectangle(10, 65, 150, 12));
+         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        //xNameCont.insertByName("Completeness", checkboxModel);
+        // create the dialog control and set the model
+        Object dialog = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialog", m_xContext);
+        XControl xControl = (XControl) UnoRuntime.queryInterface(
+                XControl.class, dialog);
+        XControlModel xControlModel = (XControlModel) UnoRuntime.queryInterface(
+                XControlModel.class, dialogModel);
+        xControl.setModel(xControlModel);
+        // add an action listener to the button control
+        XControlContainer xControlCont = (XControlContainer) UnoRuntime.queryInterface(
+                XControlContainer.class, dialog);
+        Object objectButton = xControlCont.getControl("INVIO");
+        XButton xButton = (XButton) UnoRuntime.queryInterface(XButton.class, objectButton);
+        xButton.addActionListener(new ActionListenerImpl(xControlCont));
+
+        // create a peer
+        Object toolkit = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.Toolkit", m_xContext);
+        XToolkit xToolkit = (XToolkit) UnoRuntime.queryInterface(XToolkit.class, toolkit);
+        XWindow xWindow = (XWindow) UnoRuntime.queryInterface(XWindow.class, xControl);
+        xWindow.setVisible(false);
+        xControl.createPeer(xToolkit, null);
+        // execute the dialog
+        XDialog xDialog = (XDialog) UnoRuntime.queryInterface(XDialog.class, dialog);
+        xDialog.execute();
+
+        // dispose the dialog
+        XComponent xComponent = (XComponent) UnoRuntime.queryInterface(XComponent.class, dialog);
+        xComponent.dispose();
+    }
+
+    private XPropertySet createAWTControl(Object objControl, String ctrlName,
+            String ctrlCaption, Rectangle posSize) {
+
+        XPropertySet xpsProperties = (XPropertySet) UnoRuntime.queryInterface(XPropertySet.class, objControl);
+        try {
+            xpsProperties.setPropertyValue("PositionX", new Integer(posSize.x));
+            xpsProperties.setPropertyValue("PositionY", new Integer(posSize.y));
+            xpsProperties.setPropertyValue("Width", new Integer(posSize.width));
+            xpsProperties.setPropertyValue("Height", new Integer(posSize.height));
+            xpsProperties.setPropertyValue("Name", ctrlName);
+            if (ctrlCaption != "") {
+                xpsProperties.setPropertyValue("Label", ctrlCaption);
+            }
+
+            if ((getNameContainer() != null) && (!getNameContainer().hasByName(ctrlName))) {
+                getNameContainer().insertByName(ctrlName, objControl);
+            }
+        } catch (Exception e) {
+
+        }
+        return xpsProperties;
+    }
+
     public void addStatusListener(com.sun.star.frame.XStatusListener xControl,
             com.sun.star.util.URL aURL) {
         // add your own code here
+    }
+
+    public XNameContainer getNameContainer() {
+        return xNameCont;
     }
 
     public void removeStatusListener(com.sun.star.frame.XStatusListener xControl,
@@ -417,4 +580,70 @@ public final class ContentAnalysisAddOn extends WeakBase
         return "english"; //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * action listener
+     */
+    public class ActionListenerImpl implements com.sun.star.awt.XActionListener {
+
+        private int _nCounts = 0;
+        private XControlContainer _xControlCont;
+
+        public ActionListenerImpl(XControlContainer xControlCont) {
+            _xControlCont = xControlCont;
+        }
+
+        // XEventListener
+        public void disposing(EventObject eventObject) {
+            _xControlCont = null;
+        }
+
+        // XActionListener
+        public void actionPerformed(ActionEvent actionEvent) {
+            // increase click counter
+            _nCounts++;
+
+            // set label text
+           // Object label = _xControlCont.getControl("Label");
+           // XFixedText xLabel = (XFixedText) UnoRuntime.queryInterface(XFixedText.class, label);
+           // xLabel.setText("labelprefix" + _nCounts);
+           
+           XControl OCompleteness = _xControlCont.getControl("Completeness");
+           XControl OSimplicity = _xControlCont.getControl("Simplicity");
+           XControl ONonAmbiguity = _xControlCont.getControl("NonAmbiguity");
+           XControl OContentClarity = _xControlCont.getControl("ContentClarity");
+           
+           XCheckBox XCheckBoxCompleteness = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OCompleteness);
+           XCheckBox XCheckBoxSimplicity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OSimplicity);
+           XCheckBox XCheckBoxNonAmbiguity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, ONonAmbiguity);
+           XCheckBox XCheckBoxContentClarity= (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OContentClarity);
+
+           if(XCheckBoxCompleteness.getState()>0)
+               qc.setCompleteness(true);
+           else
+               qc.setCompleteness(false);
+           
+           if(XCheckBoxSimplicity.getState()>0)
+               qc.setSimplicity(true);
+           else
+               qc.setSimplicity(false);
+           
+           if(XCheckBoxNonAmbiguity.getState()>0)
+               qc.setNonAmbiguity(true);
+           else
+               qc.setNonAmbiguity(false);
+           
+           if(XCheckBoxContentClarity.getState()>0)
+               qc.setContentClarity(true);
+           else
+               qc.setContentClarity(false);
+           
+           
+            XDialog xDialog = (XDialog) UnoRuntime.queryInterface(
+                    XDialog.class, OCompleteness.getContext());
+
+            // Close the dialog
+            xDialog.endExecute();
+            //xDialog.endExecute();
+        }
+    }
 }
