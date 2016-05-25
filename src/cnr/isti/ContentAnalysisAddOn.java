@@ -341,7 +341,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             if (aURL.Path.compareTo("Config") == 0) {
                 return this;
             }
-            if (aURL.Path.compareTo("Command1") == 0) {
+            if (aURL.Path.compareTo("Report") == 0) {
                 return this;
             }
 
@@ -381,6 +381,18 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
                 return;
             }
+
+            if (aURL.Path.compareTo("Config") == 0) {
+                // add your own code here
+                System.out.println(aURL.Path);
+                try {
+                    createDialog();
+                } catch (Exception e) {
+                    throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
+                }
+                return;
+            }
+
         }
     }
 
@@ -451,24 +463,33 @@ public final class ContentAnalysisAddOn extends WeakBase
         XPropertySet xpsCHKProperties = createAWTControl(checkboxModel, "Completeness", "Completeness",
                 new Rectangle(10, 20, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
-        
-         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        if (qc.isCompleteness()) {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        } else {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
+        }
+
+        checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
         xpsCHKProperties = createAWTControl(checkboxModel, "Simplicity", "Simplicity",
                 new Rectangle(10, 35, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
-        
-         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-         xpsCHKProperties = createAWTControl(checkboxModel, "NonAmbiguity", "Non Ambiguity",
+
+         if (qc.isSimplicity()) {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        } else {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
+        }
+
+        checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        xpsCHKProperties = createAWTControl(checkboxModel, "NonAmbiguity", "Non Ambiguity",
                 new Rectangle(10, 50, 150, 12));
-         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
         xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
 
-         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-         xpsCHKProperties = createAWTControl(checkboxModel, "ContentClarity", "Content Clarity",
+        checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        xpsCHKProperties = createAWTControl(checkboxModel, "ContentClarity", "Content Clarity",
                 new Rectangle(10, 65, 150, 12));
-         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
+        xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
         xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         //xNameCont.insertByName("Completeness", checkboxModel);
         // create the dialog control and set the model
@@ -603,41 +624,43 @@ public final class ContentAnalysisAddOn extends WeakBase
             _nCounts++;
 
             // set label text
-           // Object label = _xControlCont.getControl("Label");
-           // XFixedText xLabel = (XFixedText) UnoRuntime.queryInterface(XFixedText.class, label);
-           // xLabel.setText("labelprefix" + _nCounts);
-           
-           XControl OCompleteness = _xControlCont.getControl("Completeness");
-           XControl OSimplicity = _xControlCont.getControl("Simplicity");
-           XControl ONonAmbiguity = _xControlCont.getControl("NonAmbiguity");
-           XControl OContentClarity = _xControlCont.getControl("ContentClarity");
-           
-           XCheckBox XCheckBoxCompleteness = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OCompleteness);
-           XCheckBox XCheckBoxSimplicity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OSimplicity);
-           XCheckBox XCheckBoxNonAmbiguity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, ONonAmbiguity);
-           XCheckBox XCheckBoxContentClarity= (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OContentClarity);
+            // Object label = _xControlCont.getControl("Label");
+            // XFixedText xLabel = (XFixedText) UnoRuntime.queryInterface(XFixedText.class, label);
+            // xLabel.setText("labelprefix" + _nCounts);
+            XControl OCompleteness = _xControlCont.getControl("Completeness");
+            XControl OSimplicity = _xControlCont.getControl("Simplicity");
+            XControl ONonAmbiguity = _xControlCont.getControl("NonAmbiguity");
+            XControl OContentClarity = _xControlCont.getControl("ContentClarity");
 
-           if(XCheckBoxCompleteness.getState()>0)
-               qc.setCompleteness(true);
-           else
-               qc.setCompleteness(false);
-           
-           if(XCheckBoxSimplicity.getState()>0)
-               qc.setSimplicity(true);
-           else
-               qc.setSimplicity(false);
-           
-           if(XCheckBoxNonAmbiguity.getState()>0)
-               qc.setNonAmbiguity(true);
-           else
-               qc.setNonAmbiguity(false);
-           
-           if(XCheckBoxContentClarity.getState()>0)
-               qc.setContentClarity(true);
-           else
-               qc.setContentClarity(false);
-           
-           
+            XCheckBox XCheckBoxCompleteness = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OCompleteness);
+            XCheckBox XCheckBoxSimplicity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OSimplicity);
+            XCheckBox XCheckBoxNonAmbiguity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, ONonAmbiguity);
+            XCheckBox XCheckBoxContentClarity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OContentClarity);
+
+            if (XCheckBoxCompleteness.getState() > 0) {
+                qc.setCompleteness(true);
+            } else {
+                qc.setCompleteness(false);
+            }
+
+            if (XCheckBoxSimplicity.getState() > 0) {
+                qc.setSimplicity(true);
+            } else {
+                qc.setSimplicity(false);
+            }
+
+            if (XCheckBoxNonAmbiguity.getState() > 0) {
+                qc.setNonAmbiguity(true);
+            } else {
+                qc.setNonAmbiguity(false);
+            }
+
+            if (XCheckBoxContentClarity.getState() > 0) {
+                qc.setContentClarity(true);
+            } else {
+                qc.setContentClarity(false);
+            }
+
             XDialog xDialog = (XDialog) UnoRuntime.queryInterface(
                     XDialog.class, OCompleteness.getContext());
 

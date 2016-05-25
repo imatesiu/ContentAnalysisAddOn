@@ -56,7 +56,7 @@
                     </node>
                     <node oor:name="m3" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>cnr.isti.contentanalysisaddon:Command1</value>
+                            <value>cnr.isti.contentanalysisaddon:Report</value>
                         </prop>
                         <prop oor:name="ImageIdentifier" oor:type="xs:string">
                             <value/>
@@ -143,7 +143,7 @@
                     </node>
                     <node oor:name="m3" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>cnr.isti.contentanalysisaddon:Command1</value>
+                            <value>cnr.isti.contentanalysisaddon:Report</value>
                         </prop>
                         <prop oor:name="ImageIdentifier" oor:type="xs:string">
                             <value/>
@@ -164,9 +164,9 @@
             </node>
         </node>
         <node oor:name="Images">
-            <node oor:name="cnr.isti.contentanalysisaddon.command0.images" oor:op="replace">
+            <node oor:name="cnr.isti.contentanalysisaddon.config.images" oor:op="replace">
                 <prop oor:name="URL" oor:type="xs:string">
-                    <value>cnr.isti.contentanalysisaddon:Command0</value>
+                    <value>cnr.isti.contentanalysisaddon:Config</value>
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL">
@@ -183,9 +183,9 @@
                     </prop>
                 </node>
             </node>
-            <node oor:name="cnr.isti.contentanalysisaddon.command1.images" oor:op="replace">
+            <node oor:name="cnr.isti.contentanalysisaddon.report.images" oor:op="replace">
                 <prop oor:name="URL" oor:type="xs:string">
-                    <value>cnr.isti.contentanalysisaddon.command0:Command1</value>
+                    <value>cnr.isti.contentanalysisaddon.Report</value>
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL">
