@@ -309,6 +309,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         m_xContext = context;
         xEventListeners = new ArrayList<XLinguServiceEventListener>();
         qc = new QualityCriteria();
+        qc.setCorrectness(true);
         qc.setSimplicity(true);
         qc.setContentClarity(true);
         qc.setNonAmbiguity(true);
@@ -474,7 +475,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 new Rectangle(10, 35, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
 
-         if (qc.isSimplicity()) {
+         if (qc.isSimplicity()  ) {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         } else {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
@@ -484,13 +485,21 @@ public final class ContentAnalysisAddOn extends WeakBase
         xpsCHKProperties = createAWTControl(checkboxModel, "NonAmbiguity", "Non Ambiguity",
                 new Rectangle(10, 50, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+         if (qc.isNonAmbiguity()) {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        } else {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
+        }
 
         checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
         xpsCHKProperties = createAWTControl(checkboxModel, "ContentClarity", "Content Clarity",
                 new Rectangle(10, 65, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-        xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+         if (qc.isContentClarity()) {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
+        } else {
+            xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
+        }
         //xNameCont.insertByName("Completeness", checkboxModel);
         // create the dialog control and set the model
         Object dialog = xMultiComponentFactory.createInstanceWithContext(
