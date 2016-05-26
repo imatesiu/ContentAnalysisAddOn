@@ -70,7 +70,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     private final List<XLinguServiceEventListener> xEventListeners;
     private boolean recheck;
 
-    private QualityCriteria qc;
+    private static final QualityCriteria qc = new QualityCriteria();;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -308,7 +308,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     public ContentAnalysisAddOn(XComponentContext context) {
         m_xContext = context;
         xEventListeners = new ArrayList<XLinguServiceEventListener>();
-        qc = new QualityCriteria();
+        //qc = new QualityCriteria();
         qc.setCorrectness(true);
         qc.setSimplicity(true);
         qc.setContentClarity(true);
