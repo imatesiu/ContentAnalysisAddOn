@@ -461,10 +461,10 @@ public final class ContentAnalysisAddOn extends WeakBase
         xNameCont.insertByName("Label", labelModel);
 
         Object checkboxModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
-        XPropertySet xpsCHKProperties = createAWTControl(checkboxModel, "Completeness", "Completeness",
+        XPropertySet xpsCHKProperties = createAWTControl(checkboxModel, "Correctness", "Correctness",
                 new Rectangle(10, 20, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-        if (qc.isCompleteness()) {
+        if (qc.isCorrectness()) {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         } else {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
@@ -636,20 +636,20 @@ public final class ContentAnalysisAddOn extends WeakBase
             // Object label = _xControlCont.getControl("Label");
             // XFixedText xLabel = (XFixedText) UnoRuntime.queryInterface(XFixedText.class, label);
             // xLabel.setText("labelprefix" + _nCounts);
-            XControl OCompleteness = _xControlCont.getControl("Completeness");
+            XControl OCorrectness = _xControlCont.getControl("Correctness");
             XControl OSimplicity = _xControlCont.getControl("Simplicity");
             XControl ONonAmbiguity = _xControlCont.getControl("NonAmbiguity");
             XControl OContentClarity = _xControlCont.getControl("ContentClarity");
 
-            XCheckBox XCheckBoxCompleteness = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OCompleteness);
+            XCheckBox XCheckBoxCorrectness = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OCorrectness);
             XCheckBox XCheckBoxSimplicity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OSimplicity);
             XCheckBox XCheckBoxNonAmbiguity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, ONonAmbiguity);
             XCheckBox XCheckBoxContentClarity = (XCheckBox) UnoRuntime.queryInterface(XCheckBox.class, OContentClarity);
 
-            if (XCheckBoxCompleteness.getState() > 0) {
-                qc.setCompleteness(true);
+            if (XCheckBoxCorrectness.getState() > 0) {
+                qc.setCorrectness(true);
             } else {
-                qc.setCompleteness(false);
+                qc.setCorrectness(false);
             }
 
             if (XCheckBoxSimplicity.getState() > 0) {
@@ -671,7 +671,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             }
 
             XDialog xDialog = (XDialog) UnoRuntime.queryInterface(
-                    XDialog.class, OCompleteness.getContext());
+                    XDialog.class, OCorrectness.getContext());
 
             // Close the dialog
             xDialog.endExecute();
