@@ -25,8 +25,6 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
-import com.sun.star.beans.PropertyVetoException;
-import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
@@ -500,8 +498,8 @@ public final class ContentAnalysisAddOn extends WeakBase
                         = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
                                 com.sun.star.text.XWordCursor.class, pos);
 
-                xWordCursor.gotoStart(true);
-                xWordCursor.gotoEnd(true);
+               // xWordCursor.gotoStart(true);
+               // xWordCursor.gotoEnd(true);
                // xWordCursor.gotoEndOfWord(true);
 
                 XPropertySet xPropertySet
@@ -509,22 +507,27 @@ public final class ContentAnalysisAddOn extends WeakBase
                                 XPropertySet.class, xWordCursor);
                 xPropertySet.setPropertyValue("CharWeight",
                         new Float(com.sun.star.awt.FontWeight.BOLD));
-                
+                xPropertySet.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.NONE);
+                xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));
                 for(Annotation ann: acc.getAnnotations()){
                     String raccomandation = ann.getRecommendation();
                    // xText.insertString(xText, Text, recheck);
+                XTextRange  pos2 = xText.getEnd();
+                xText.insertString(pos2, raccomandation+"\n\r", true);
                 XWordCursor xWordCursor2= (XWordCursor) UnoRuntime.queryInterface(
-                                XWordCursor.class, xText.getEnd());
-                xText.insertString(xWordCursor2, raccomandation+"\n\r", true);
+                                XWordCursor.class, pos2);
+                
                // xWordCursor = (XWordCursor) UnoRuntime.queryInterface(
                //                 XWordCursor.class, xText.getStart());
 
-                
+               // xWordCursor2.gotoEndOfWord(true);
                 XPropertySet xPropertySet2 = (XPropertySet) UnoRuntime.queryInterface(
                                 XPropertySet.class, xWordCursor2);
                     
-                    xPropertySet2.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.ITALIC);
-                    xPropertySet2.setPropertyValue("CharBackColor", Color.YELLOW.getRGB());
+                  xPropertySet2.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.ITALIC);
+                  xPropertySet2.setPropertyValue("CharWeight",
+                        new Float(com.sun.star.awt.FontWeight.DONTKNOW));
+                  xPropertySet2.setPropertyValue("CharBackColor", 0xFF000000);
                  // xWordCursor.gotoPreviousWord(true);  
                 }
                
