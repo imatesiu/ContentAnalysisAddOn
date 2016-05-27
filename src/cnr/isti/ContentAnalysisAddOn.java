@@ -461,7 +461,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                                 = (XTextDocument) UnoRuntime.queryInterface(
                                         XTextDocument.class, oDocToStore);
 
-                        insertReport(xTextDocument, TotalACA,text);
+                        insertReport(xTextDocument, TotalACA, text);
 
                         // xTextDocument.getText().setString(docText);
                         // 
@@ -492,62 +492,59 @@ public final class ContentAnalysisAddOn extends WeakBase
                 Text += acc.getOverallQualityMeasure() + " " + acc.getOverallQuality() + " - " + acc.getOverallRecommendations() + "\n\r";
 
                 //xText.setString(Text);
-                XTextRange pos =  xText.getEnd();
+                XTextRange pos = xText.getEnd();
                 xText.insertString(pos, Text, true);
                 XWordCursor xWordCursor
                         = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
                                 com.sun.star.text.XWordCursor.class, pos);
 
-               // xWordCursor.gotoStart(true);
-               // xWordCursor.gotoEnd(true);
-               // xWordCursor.gotoEndOfWord(true);
-
+                // xWordCursor.gotoStart(true);
+                // xWordCursor.gotoEnd(true);
+                // xWordCursor.gotoEndOfWord(true);
                 XPropertySet xPropertySet
                         = (XPropertySet) UnoRuntime.queryInterface(
                                 XPropertySet.class, xWordCursor);
                 xPropertySet.setPropertyValue("CharWeight",
                         new Float(com.sun.star.awt.FontWeight.BOLD));
-                xPropertySet.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.NONE);
+                xPropertySet.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.NONE);
                 xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));
-                for(Annotation ann: acc.getAnnotations()){
-                
-                 
-                String raccomandation = ann.getRecommendation();
-               
-                if(ann.getStartSentence_Offset()!=null){
-                Integer s = ann.getStartSentence_Offset();
-                Integer e = ann.getEndSentence_Offset();
-                    String sentence = text.substring(s, e);
-                    pos = xText.getEnd();
-                    xText.insertString(pos, sentence, true);
-                    xWordCursor
-                        = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
-                                com.sun.star.text.XWordCursor.class, pos);
-                    xPropertySet
-                        = (XPropertySet) UnoRuntime.queryInterface(
-                                XPropertySet.class, xWordCursor);
-                xPropertySet.setPropertyValue("CharWeight",
-                        new Float(com.sun.star.awt.FontWeight.DONTKNOW));
-                xPropertySet.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.NONE);
-                xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));
+                for (Annotation ann : acc.getAnnotations()) {
+
+                    String raccomandation = ann.getRecommendation();
+
+                    if (ann.getStartSentence_Offset() != null) {
+                        Integer s = ann.getStartSentence_Offset();
+                        Integer e = ann.getEndSentence_Offset();
+                        String sentence = text.substring(s, e);
+                        pos = xText.getEnd();
+                        xText.insertString(pos, sentence, true);
+                        xWordCursor
+                                = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
+                                        com.sun.star.text.XWordCursor.class, pos);
+                        xPropertySet
+                                = (XPropertySet) UnoRuntime.queryInterface(
+                                        XPropertySet.class, xWordCursor);
+                        xPropertySet.setPropertyValue("CharWeight",
+                                new Float(com.sun.star.awt.FontWeight.DONTKNOW));
+                        xPropertySet.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.NONE);
+                        xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));
+                    }
+                    // xText.insertString(xText, Text, recheck);
+                    XTextRange pos2 = xText.getEnd();
+                    xText.insertString(pos2, raccomandation + "\n\r", true);
+                    XWordCursor xWordCursor2 = (XWordCursor) UnoRuntime.queryInterface(
+                            XWordCursor.class, pos2);
+
+                    XPropertySet xPropertySet2 = (XPropertySet) UnoRuntime.queryInterface(
+                            XPropertySet.class, xWordCursor2);
+
+                    xPropertySet2.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.ITALIC);
+                    xPropertySet2.setPropertyValue("CharWeight",
+                            new Float(com.sun.star.awt.FontWeight.DONTKNOW));
+                    xPropertySet2.setPropertyValue("CharBackColor", 0xFF000000);
+
                 }
-                   // xText.insertString(xText, Text, recheck);
-                XTextRange  pos2 = xText.getEnd();
-                xText.insertString(pos2, raccomandation+"\n\r", true);
-                XWordCursor xWordCursor2= (XWordCursor) UnoRuntime.queryInterface(
-                                XWordCursor.class, pos2);
-                
-              
-                XPropertySet xPropertySet2 = (XPropertySet) UnoRuntime.queryInterface(
-                                XPropertySet.class, xWordCursor2);
-                    
-                  xPropertySet2.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.ITALIC);
-                  xPropertySet2.setPropertyValue("CharWeight",
-                        new Float(com.sun.star.awt.FontWeight.DONTKNOW));
-                  xPropertySet2.setPropertyValue("CharBackColor", 0xFF000000);
-                 
-                }
-               
+
             }
         }
     }
