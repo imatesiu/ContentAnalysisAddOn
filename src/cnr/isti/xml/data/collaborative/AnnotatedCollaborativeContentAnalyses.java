@@ -30,7 +30,11 @@ public class AnnotatedCollaborativeContentAnalyses implements Serializable{
 	 * @OneToMany(mappedBy="Analyses")
 	 */
 	
+        public AnnotatedCollaborativeContentAnalyses(){
+            
+        }
 	
+        
 	@XmlTransient
 	private static final long serialVersionUID = 8605819018990855517L;
 	
