@@ -14,9 +14,9 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XFixedText;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
+import com.sun.star.beans.PropertyState;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.lib.uno.helper.Factory;
@@ -30,7 +30,6 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.Locale;
 import com.sun.star.lang.XComponent;
-import com.sun.star.lang.XInitialization;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.lang.XServiceDisplayName;
@@ -43,7 +42,6 @@ import com.sun.star.text.TextMarkupType;
 import com.sun.star.text.XTextDocument;
 import java.awt.Rectangle;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.client.Client;
@@ -421,17 +419,30 @@ public final class ContentAnalysisAddOn extends WeakBase
             com.sun.star.frame.XComponentLoader xCompLoader
                     = (com.sun.star.frame.XComponentLoader) UnoRuntime.queryInterface(
                             com.sun.star.frame.XComponentLoader.class, oDesktop);
-
-            PropertyValue propertyValue[] = new PropertyValue[2];
+            String url = "private:factory/swriter";
+            
+            PropertyValue[] propVals = new PropertyValue[1];
+        propVals[0] = new PropertyValue();
+        propVals[0].Name = "FilterName";
+        propVals[0].State = PropertyState.DIRECT_VALUE;
+        propVals[0].Handle = -1;
+       // propVals[0].Value = new uno.Any(true); // writer_pdf_Export  ,  swriter: MS Word 97 , HTML (StarWriter) ,*/
+        
+           // PropertyValue propertyValue[] = new PropertyValue[2];
             XComponent oDocToStore = xCompLoader.loadComponentFromURL(
-                    "private:factory/swriter", "_blank", 0, propertyValue);
-            com.sun.star.frame.XStorable xStorable
+                    url, "_blank", 0, propVals );
+            /*com.sun.star.frame.XStorable xStorable
                     = (com.sun.star.frame.XStorable) UnoRuntime.queryInterface(
-                            com.sun.star.frame.XStorable.class, oDocToStore);
+                            com.sun.star.frame.XStorable.class, oDocToStore);*/
           
             String docText = "<b>This will</b> be my first paragraph.\n\r";
             docText += "This will be my second paragraph.\n\r";
-            ((XTextDocument)oDocToStore).getText().setString(docText);
+            
+            XTextDocument xTextDocument =
+                (XTextDocument)UnoRuntime.queryInterface(
+                    XTextDocument.class, oDocToStore);
+            
+            xTextDocument.getText().setString(docText);
             
 
             /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
@@ -442,7 +453,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             propertyValue[1].Value = "StarOffice XML (Writer)";
             xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
         } catch (Exception e) {
-
+             System.out.println(e.getMessage());
         }
 
     }
