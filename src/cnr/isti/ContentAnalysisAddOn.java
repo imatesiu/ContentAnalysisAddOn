@@ -25,6 +25,8 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.PropertyVetoException;
+import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
@@ -70,8 +72,6 @@ public final class ContentAnalysisAddOn extends WeakBase
     private boolean recheck;
 
     private static final QualityCriteria qc = new QualityCriteria();
-
-    ;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -189,6 +189,24 @@ public final class ContentAnalysisAddOn extends WeakBase
 
         try {
             if (paraText.length() > 1) {
+
+                AnnotatedCollaborativeContentAnalyses res = CheckText(paraText);
+                if (res != null) {
+                    fromCAtoProofreadingResult(res, paRes, paraText, footnotePositions);
+                    System.out.println(res);
+                }
+            }
+        } catch (Throwable t) {
+
+            paRes.nBehindEndOfSentencePosition = paraText.length();
+        }
+
+        return paRes;
+    }
+
+    private AnnotatedCollaborativeContentAnalyses CheckText(String paraText) {
+        try {
+            if (paraText.length() > 1) {
                 Client client = ClientBuilder.newClient();
                 WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
 
@@ -208,7 +226,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
                 client = ClientBuilder.newClient();
                 if (id == null) {
-                    return paRes;
+                    return null;
                 }
 
                 target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id + "/status");
@@ -237,16 +255,14 @@ public final class ContentAnalysisAddOn extends WeakBase
                     AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
                     });
                     //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
-                    fromCAtoProofreadingResult(res, paRes, paraText, footnotePositions);
-                    System.out.println(res);
+                    return res;
                 }
             }
         } catch (Throwable t) {
-
-            paRes.nBehindEndOfSentencePosition = paraText.length();
+            return null;
+            //todo
         }
-
-        return paRes;
+        return null;
     }
 
     private void fromCAtoProofreadingResult(AnnotatedCollaborativeContentAnalyses res, ProofreadingResult paRes,
@@ -254,7 +270,6 @@ public final class ContentAnalysisAddOn extends WeakBase
         List<SingleProofreadingError> errorList = new ArrayList<SingleProofreadingError>();
         List<Annotation> listanna = new ArrayList<Annotation>();
         for (AnnotatedCollaborativeContentAnalysis acca : res.getAnnotateCollaborativeContentAnalysis()) {
-
             listanna.addAll(acca.getAnnotations());
         }
         //Collections.sort(listanna);
@@ -308,6 +323,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     public ContentAnalysisAddOn(XComponentContext context) {
         m_xContext = context;
+        recheck = false;
         xEventListeners = new ArrayList<XLinguServiceEventListener>();
         //qc = new QualityCriteria();
         qc.setCorrectness(true);
@@ -383,9 +399,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
                 return;
             }
-            
-           
-                    
+
             if (aURL.Path.compareTo("Report") == 0) {
                 // add your own code here
                 System.out.println(aURL.Path);
@@ -413,49 +427,86 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     private void createReport() {
         try {
-            com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
-            Object oDesktop = xMCF.createInstanceWithContext(
-                    "com.sun.star.frame.Desktop", m_xContext);
-            com.sun.star.frame.XComponentLoader xCompLoader
-                    = (com.sun.star.frame.XComponentLoader) UnoRuntime.queryInterface(
-                            com.sun.star.frame.XComponentLoader.class, oDesktop);
-            String url = "private:factory/swriter";
-            
-            PropertyValue[] propVals = new PropertyValue[1];
-        propVals[0] = new PropertyValue();
-        propVals[0].Name = "FilterName";
-        propVals[0].State = PropertyState.DIRECT_VALUE;
-        propVals[0].Handle = -1;
-       // propVals[0].Value = new uno.Any(true); // writer_pdf_Export  ,  swriter: MS Word 97 , HTML (StarWriter) ,*/
-        
-           // PropertyValue propertyValue[] = new PropertyValue[2];
-            XComponent oDocToStore = xCompLoader.loadComponentFromURL(
-                    url, "_blank", 0, propVals );
-            /*com.sun.star.frame.XStorable xStorable
+
+            XTextDocument m_xTextDocument = (XTextDocument) UnoRuntime.queryInterface(XTextDocument.class, m_xFrame.getController().getModel());
+            String text = m_xTextDocument.getText().getString();
+            if (text != null) {
+                if (text.length() > 1) {
+                    AnnotatedCollaborativeContentAnalyses TotalACA = CheckText(text);
+
+                    if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+                        com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
+                        Object oDesktop = xMCF.createInstanceWithContext(
+                                "com.sun.star.frame.Desktop", m_xContext);
+                        com.sun.star.frame.XComponentLoader xCompLoader
+                                = (com.sun.star.frame.XComponentLoader) UnoRuntime.queryInterface(
+                                        com.sun.star.frame.XComponentLoader.class, oDesktop);
+                        String url = "private:factory/swriter";
+
+                        PropertyValue[] propVals = new PropertyValue[1];
+                        propVals[0] = new PropertyValue();
+                        propVals[0].Name = "FilterName";
+                        propVals[0].State = PropertyState.DIRECT_VALUE;
+                        propVals[0].Handle = -1;
+                        // propVals[0].Value = new uno.Any(true); // writer_pdf_Export  ,  swriter: MS Word 97 , HTML (StarWriter) ,*/
+
+                        // PropertyValue propertyValue[] = new PropertyValue[2];
+                        XComponent oDocToStore = xCompLoader.loadComponentFromURL(
+                                url, "_blank", 0, propVals);
+                        /*com.sun.star.frame.XStorable xStorable
                     = (com.sun.star.frame.XStorable) UnoRuntime.queryInterface(
                             com.sun.star.frame.XStorable.class, oDocToStore);*/
-          
-            String docText = "<b>This will</b> be my first paragraph.\n\r";
-            docText += "This will be my second paragraph.\n\r";
-            
-            XTextDocument xTextDocument =
-                (XTextDocument)UnoRuntime.queryInterface(
-                    XTextDocument.class, oDocToStore);
-            
-            xTextDocument.getText().setString(docText);
-            
+                        XTextDocument xTextDocument
+                                = (XTextDocument) UnoRuntime.queryInterface(
+                                        XTextDocument.class, oDocToStore);
 
-            /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
+                        insertReport(xTextDocument, TotalACA);
+
+                        // xTextDocument.getText().setString(docText);
+                        // 
+                        /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
             propertyValue[0].Name = "Overwrite";
             propertyValue[0].Value = new Boolean(true);
             propertyValue[1] = new com.sun.star.beans.PropertyValue();
             propertyValue[1].Name = "FilterName";
             propertyValue[1].Value = "StarOffice XML (Writer)";
             xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
+                    }
+                }
+            }
         } catch (Exception e) {
-             System.out.println(e.getMessage());
+            System.out.println(e.getMessage());
         }
 
+    }
+
+    private void insertReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA) throws Exception {
+        if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+            com.sun.star.text.XText xText = xTextDocument.getText();
+            for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
+                /* if(acc.getType().equals(acc)){
+                    
+                }*/
+                String Text = acc.getType() + " Risk:\n\r";
+                Text += acc.getOverallQualityMeasure() + " " + acc.getOverallQuality() + " - " + acc.getOverallRecommendations() + "\n\r";
+
+                xText.setString(Text);
+                com.sun.star.text.XWordCursor xWordCursor
+                        = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
+                                com.sun.star.text.XWordCursor.class, xText.getStart());
+
+                //xWordCursor.gotoNextWord(false);
+                //xWordCursor.gotoNextWord(false);
+                xWordCursor.gotoEndOfWord(true);
+
+                com.sun.star.beans.XPropertySet xPropertySet
+                        = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
+                                com.sun.star.beans.XPropertySet.class, xWordCursor);
+                xPropertySet.setPropertyValue("CharWeight",
+                        new Float(com.sun.star.awt.FontWeight.BOLD));
+
+            }
+        }
     }
 
     private void createDialog() throws com.sun.star.uno.Exception {
