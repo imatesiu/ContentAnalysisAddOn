@@ -40,6 +40,7 @@ import com.sun.star.linguistic2.XLinguServiceEventListener;
 import com.sun.star.linguistic2.XProofreader;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.text.TextMarkupType;
+import com.sun.star.text.XTextDocument;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +71,9 @@ public final class ContentAnalysisAddOn extends WeakBase
     private final List<XLinguServiceEventListener> xEventListeners;
     private boolean recheck;
 
-    private static final QualityCriteria qc = new QualityCriteria();;
+    private static final QualityCriteria qc = new QualityCriteria();
+
+    ;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -207,7 +210,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
                 client = ClientBuilder.newClient();
                 if (id == null) {
-                    id = "1";
+                    return paRes;
                 }
 
                 target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id + "/status");
@@ -382,12 +385,25 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
                 return;
             }
-
-            if (aURL.Path.compareTo("Config") == 0) {
+            
+           
+                    
+            if (aURL.Path.compareTo("Report") == 0) {
                 // add your own code here
                 System.out.println(aURL.Path);
                 try {
-                    createDialog();
+                    createReport();
+                } catch (Exception e) {
+                    throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
+                }
+                return;
+            }
+
+            if (aURL.Path.compareTo("About") == 0) {
+                // add your own code here
+                System.out.println(aURL.Path);
+                try {
+                    //createDialog();
                 } catch (Exception e) {
                     throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
                 }
@@ -395,6 +411,40 @@ public final class ContentAnalysisAddOn extends WeakBase
             }
 
         }
+    }
+
+    private void createReport() {
+        try {
+            com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
+            Object oDesktop = xMCF.createInstanceWithContext(
+                    "com.sun.star.frame.Desktop", m_xContext);
+            com.sun.star.frame.XComponentLoader xCompLoader
+                    = (com.sun.star.frame.XComponentLoader) UnoRuntime.queryInterface(
+                            com.sun.star.frame.XComponentLoader.class, oDesktop);
+
+            PropertyValue propertyValue[] = new PropertyValue[2];
+            XComponent oDocToStore = xCompLoader.loadComponentFromURL(
+                    "private:factory/swriter", "_blank", 0, propertyValue);
+            com.sun.star.frame.XStorable xStorable
+                    = (com.sun.star.frame.XStorable) UnoRuntime.queryInterface(
+                            com.sun.star.frame.XStorable.class, oDocToStore);
+          
+            String docText = "<b>This will</b> be my first paragraph.\n\r";
+            docText += "This will be my second paragraph.\n\r";
+            ((XTextDocument)oDocToStore).getText().setString(docText);
+            
+
+            /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
+            propertyValue[0].Name = "Overwrite";
+            propertyValue[0].Value = new Boolean(true);
+            propertyValue[1] = new com.sun.star.beans.PropertyValue();
+            propertyValue[1].Name = "FilterName";
+            propertyValue[1].Value = "StarOffice XML (Writer)";
+            xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
+        } catch (Exception e) {
+
+        }
+
     }
 
     private void createDialog() throws com.sun.star.uno.Exception {
@@ -475,7 +525,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 new Rectangle(10, 35, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
 
-         if (qc.isSimplicity()  ) {
+        if (qc.isSimplicity()) {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         } else {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
@@ -485,7 +535,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         xpsCHKProperties = createAWTControl(checkboxModel, "NonAmbiguity", "Non Ambiguity",
                 new Rectangle(10, 50, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-         if (qc.isNonAmbiguity()) {
+        if (qc.isNonAmbiguity()) {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         } else {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
@@ -495,7 +545,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         xpsCHKProperties = createAWTControl(checkboxModel, "ContentClarity", "Content Clarity",
                 new Rectangle(10, 65, 150, 12));
         xpsCHKProperties.setPropertyValue("TriState", Boolean.FALSE);
-         if (qc.isContentClarity()) {
+        if (qc.isContentClarity()) {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 1));
         } else {
             xpsCHKProperties.setPropertyValue("State", new Short((short) 0));
