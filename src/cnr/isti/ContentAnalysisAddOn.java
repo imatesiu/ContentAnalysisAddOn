@@ -42,6 +42,8 @@ import com.sun.star.linguistic2.XProofreader;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.text.TextMarkupType;
 import com.sun.star.text.XTextDocument;
+import com.sun.star.text.XWordCursor;
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -491,20 +493,39 @@ public final class ContentAnalysisAddOn extends WeakBase
                 Text += acc.getOverallQualityMeasure() + " " + acc.getOverallQuality() + " - " + acc.getOverallRecommendations() + "\n\r";
 
                 xText.setString(Text);
+                
                 com.sun.star.text.XWordCursor xWordCursor
                         = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
                                 com.sun.star.text.XWordCursor.class, xText.getStart());
 
-                //xWordCursor.gotoNextWord(false);
-                //xWordCursor.gotoNextWord(false);
-                xWordCursor.gotoEndOfWord(true);
+                xWordCursor.gotoStart(true);
+                xWordCursor.gotoEnd(true);
+               // xWordCursor.gotoEndOfWord(true);
 
-                com.sun.star.beans.XPropertySet xPropertySet
-                        = (com.sun.star.beans.XPropertySet) UnoRuntime.queryInterface(
-                                com.sun.star.beans.XPropertySet.class, xWordCursor);
+                XPropertySet xPropertySet
+                        = (XPropertySet) UnoRuntime.queryInterface(
+                                XPropertySet.class, xWordCursor);
                 xPropertySet.setPropertyValue("CharWeight",
                         new Float(com.sun.star.awt.FontWeight.BOLD));
+                
+                for(Annotation ann: acc.getAnnotations()){
+                    String raccomandation = ann.getRecommendation();
+                   // xText.insertString(xText, Text, recheck);
+                xWordCursor= (XWordCursor) UnoRuntime.queryInterface(
+                                XWordCursor.class, xText.getEnd());
+                xText.insertString(xWordCursor.getStart(), raccomandation+"\n\r", true);
+               // xWordCursor = (XWordCursor) UnoRuntime.queryInterface(
+               //                 XWordCursor.class, xText.getStart());
 
+                
+                xPropertySet = (XPropertySet) UnoRuntime.queryInterface(
+                                XPropertySet.class, xWordCursor);
+                    
+                    xPropertySet.setPropertyValue("CharPosture",com.sun.star.awt.FontSlant.ITALIC);
+                    xPropertySet.setPropertyValue("CharBackColor", Color.YELLOW.getRGB());
+                 // xWordCursor.gotoPreviousWord(true);  
+                }
+                break;
             }
         }
     }
