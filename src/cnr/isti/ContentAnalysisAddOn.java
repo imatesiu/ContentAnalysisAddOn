@@ -47,6 +47,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -71,7 +72,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     private final List<XLinguServiceEventListener> xEventListeners;
     private boolean recheck;
-
+    private static final boolean testMode = true;
     private static final QualityCriteria qc = new QualityCriteria();
 
     @Override
@@ -97,7 +98,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 System.err.println("Sorry, don't know what to do, sEvent = " + sEvent);
             }
         } catch (Throwable e) {
-
+            showError(e);
         }
     }
 
@@ -166,7 +167,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             int[] footnotePositions = getPropertyValues("FootnotePositions", propertyValues);  // since LO 4.3
             return doGrammarCheckingInternal(paraText, locale, paRes, footnotePositions, nSuggestedBehindEndOfSentencePosition);
         } catch (Throwable t) {
-
+            showError(t);
             return paRes;
         }
 
@@ -260,6 +261,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
             }
         } catch (Throwable t) {
+            
             return null;
             //todo
         }
@@ -396,6 +398,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 try {
                     createDialog();
                 } catch (Exception e) {
+                    showError(e);
                     throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
                 }
                 return;
@@ -407,6 +410,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 try {
                     createReport();
                 } catch (Exception e) {
+                    showError(e);
                     throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
                 }
                 return;
@@ -476,6 +480,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
             }
         } catch (Exception e) {
+            showError(e);
             System.out.println(e.getMessage());
         }
 
@@ -515,9 +520,15 @@ public final class ContentAnalysisAddOn extends WeakBase
                     if (ann.getStartSentence_Offset() != null) {
                         Integer s = ann.getStartSentence_Offset();
                         Integer e = ann.getEndSentence_Offset();
-                        String sentence = text.substring(s, e);
+                        String sentence = "";
+                        try{
+                            sentence = text.substring(s, e);
+                        }catch(Exception error){
+                            showError(error);
+                            sentence= "not valid";
+                        }
                         pos = xText.getEnd();
-                        xText.insertString(pos, sentence, true);
+                        xText.insertString(pos, sentence+"\n\r", true);
                         xWordCursor
                                 = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
                                         com.sun.star.text.XWordCursor.class, pos);
@@ -541,7 +552,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                     xPropertySet2.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.ITALIC);
                     xPropertySet2.setPropertyValue("CharWeight",
                             new Float(com.sun.star.awt.FontWeight.DONTKNOW));
-                    xPropertySet2.setPropertyValue("CharBackColor", 0xFF000000);
+                    xPropertySet2.setPropertyValue("CharBackColor", 0x00FFFF00);
 
                 }
 
@@ -702,7 +713,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 getNameContainer().insertByName(ctrlName, objControl);
             }
         } catch (Exception e) {
-
+            showError(e);
         }
         return xpsProperties;
     }
@@ -725,6 +736,23 @@ public final class ContentAnalysisAddOn extends WeakBase
     public String getImplementationName() {
         return m_implementationName;
     }
+    
+     private void showError(Throwable e) {
+    if (testMode) {
+      throw new RuntimeException(e);
+    }
+    String msg = "An error has occurred in CATool "
+        + ":\n" + e + "\nStacktrace:\n";
+    msg += e.getLocalizedMessage();
+    String metaInfo = "OS: " + System.getProperty("os.name") + " on "
+        + System.getProperty("os.arch") + ", Java version "
+        + System.getProperty("java.version") + " from "
+        + System.getProperty("java.vm.vendor");
+    msg += metaInfo;
+    DialogThread dt = new DialogThread(msg);
+   // e.printStackTrace();
+    dt.start();
+  }
 
     public boolean supportsService(String sService) {
         int len = m_serviceNames.length;
@@ -830,4 +858,19 @@ public final class ContentAnalysisAddOn extends WeakBase
             //xDialog.endExecute();
         }
     }
+    
+    
+     static class DialogThread extends Thread {
+    private final String text;
+
+    DialogThread(String text) {
+      this.text = text;
+    }
+
+    @Override
+    public void run() {
+        JOptionPane.showMessageDialog(null, text);
+    }
+  }
+    
 }
