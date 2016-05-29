@@ -706,7 +706,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 XPropertySet.class, dialogModel);
         xPSetDialog.setPropertyValue("PositionX", new Integer(100));
         xPSetDialog.setPropertyValue("PositionY", new Integer(100));
-        xPSetDialog.setPropertyValue("Width", new Integer(150));
+        xPSetDialog.setPropertyValue("Width", new Integer(200));
         xPSetDialog.setPropertyValue("Height", new Integer(100));
         xPSetDialog.setPropertyValue("Title", new String("About CA"));
         // get the service manager from the dialog model
@@ -719,7 +719,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 "com.sun.star.awt.UnoControlButtonModel");
         XPropertySet xPSetButton2 = (XPropertySet) UnoRuntime.queryInterface(
                 XPropertySet.class, buttonModel2);
-        xPSetButton2.setPropertyValue("PositionX", new Integer(5));
+        xPSetButton2.setPropertyValue("PositionX", new Integer(80));
         xPSetButton2.setPropertyValue("PositionY", new Integer(80));
         xPSetButton2.setPropertyValue("Width", new Integer(50));
         xPSetButton2.setPropertyValue("Height", new Integer(14));
@@ -735,12 +735,12 @@ public final class ContentAnalysisAddOn extends WeakBase
                 XPropertySet.class, labelModel);
         xPSetLabel.setPropertyValue("PositionX", new Integer(5));
         xPSetLabel.setPropertyValue("PositionY", new Integer(5));
-        xPSetLabel.setPropertyValue("Width", new Integer(100));
-        xPSetLabel.setPropertyValue("Height", new Integer(14));
+        xPSetLabel.setPropertyValue("Width", new Integer(200));
+        xPSetLabel.setPropertyValue("Height", new Integer(150));
         xPSetLabel.setPropertyValue("Name", "LABEL");
         xPSetLabel.setPropertyValue("TabIndex", new Short((short) 1));
         String msg = "Prototype of Content Analysis Tool\n\r https://github.com/ISTI-FMT-LearnPAd/ContentAnalysisComponent/\n\r"
-                + "Alessio Ferrari - Giorgio O. Spagnolo";
+                + "Alessio Ferrari - Giorgio O. Spagnolo\n\r FMT ISTI CNR Pisa Italy";
         xPSetLabel.setPropertyValue("Label", msg);
         // insert the control models into the dialog model
         XNameContainer xNameCont = (XNameContainer) UnoRuntime.queryInterface(
