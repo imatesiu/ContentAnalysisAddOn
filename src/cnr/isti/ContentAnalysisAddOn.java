@@ -420,8 +420,9 @@ public final class ContentAnalysisAddOn extends WeakBase
                 // add your own code here
                 System.out.println(aURL.Path);
                 try {
-                    //createDialog();
+                    createAboutDialog();
                 } catch (Exception e) {
+                    showError(e);
                     throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
                 }
                 return;
@@ -430,7 +431,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         }
     }
 
-    private void createReport() {
+    private synchronized void createReport() {
         try {
 
             XTextDocument m_xTextDocument = (XTextDocument) UnoRuntime.queryInterface(XTextDocument.class, m_xFrame.getController().getModel());
@@ -695,6 +696,87 @@ public final class ContentAnalysisAddOn extends WeakBase
         xComponent.dispose();
     }
 
+    private void createAboutDialog() throws com.sun.star.uno.Exception {
+        // get the service manager from the component context
+        XMultiComponentFactory xMultiComponentFactory = m_xContext.getServiceManager();
+        // create the dialog model and set the properties
+        Object dialogModel = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialogModel", m_xContext);
+        XPropertySet xPSetDialog = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, dialogModel);
+        xPSetDialog.setPropertyValue("PositionX", new Integer(100));
+        xPSetDialog.setPropertyValue("PositionY", new Integer(100));
+        xPSetDialog.setPropertyValue("Width", new Integer(150));
+        xPSetDialog.setPropertyValue("Height", new Integer(100));
+        xPSetDialog.setPropertyValue("Title", new String("About CA"));
+        // get the service manager from the dialog model
+        XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                XMultiServiceFactory.class, dialogModel);
+
+       
+
+        Object buttonModel2 = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet xPSetButton2 = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, buttonModel2);
+        xPSetButton2.setPropertyValue("PositionX", new Integer(5));
+        xPSetButton2.setPropertyValue("PositionY", new Integer(80));
+        xPSetButton2.setPropertyValue("Width", new Integer(50));
+        xPSetButton2.setPropertyValue("Height", new Integer(14));
+        xPSetButton2.setPropertyValue("Name", "Cancel");
+        xPSetButton2.setPropertyValue("TabIndex", new Short((short) 0));
+        xPSetButton2.setPropertyValue("Label", new String("OK"));
+        xPSetButton2.setPropertyValue("PushButtonType", new Short((short) PushButtonType.CANCEL_value));
+
+        // create the label model and set the properties
+        Object labelModel = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlFixedTextModel");
+        XPropertySet xPSetLabel = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, labelModel);
+        xPSetLabel.setPropertyValue("PositionX", new Integer(5));
+        xPSetLabel.setPropertyValue("PositionY", new Integer(5));
+        xPSetLabel.setPropertyValue("Width", new Integer(100));
+        xPSetLabel.setPropertyValue("Height", new Integer(14));
+        xPSetLabel.setPropertyValue("Name", "LABEL");
+        xPSetLabel.setPropertyValue("TabIndex", new Short((short) 1));
+        String msg = "Prototype of Content Analysis Tool\n\r https://github.com/ISTI-FMT-LearnPAd/ContentAnalysisComponent/\n\r"
+                + "Alessio Ferrari - Giorgio O. Spagnolo";
+        xPSetLabel.setPropertyValue("Label", msg);
+        // insert the control models into the dialog model
+        XNameContainer xNameCont = (XNameContainer) UnoRuntime.queryInterface(
+                XNameContainer.class, dialogModel);
+        this.xNameCont = xNameCont;
+        
+        xNameCont.insertByName("Cancel", buttonModel2);
+        xNameCont.insertByName("Label", labelModel);
+
+        
+        // create the dialog control and set the model
+        Object dialog = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialog", m_xContext);
+        XControl xControl = (XControl) UnoRuntime.queryInterface(
+                XControl.class, dialog);
+        XControlModel xControlModel = (XControlModel) UnoRuntime.queryInterface(
+                XControlModel.class, dialogModel);
+        xControl.setModel(xControlModel);
+        
+
+        // create a peer
+        Object toolkit = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.Toolkit", m_xContext);
+        XToolkit xToolkit = (XToolkit) UnoRuntime.queryInterface(XToolkit.class, toolkit);
+        XWindow xWindow = (XWindow) UnoRuntime.queryInterface(XWindow.class, xControl);
+        xWindow.setVisible(false);
+        xControl.createPeer(xToolkit, null);
+        // execute the dialog
+        XDialog xDialog = (XDialog) UnoRuntime.queryInterface(XDialog.class, dialog);
+        xDialog.execute();
+
+        // dispose the dialog
+        XComponent xComponent = (XComponent) UnoRuntime.queryInterface(XComponent.class, dialog);
+        xComponent.dispose();
+    }
+    
     private XPropertySet createAWTControl(Object objControl, String ctrlName,
             String ctrlCaption, Rectangle posSize) {
 
