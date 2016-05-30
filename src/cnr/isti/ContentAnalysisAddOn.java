@@ -200,6 +200,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             }
         } catch (Throwable t) {
 
+            showError(t);
             paRes.nBehindEndOfSentencePosition = paraText.length();
         }
 
@@ -217,7 +218,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
                 cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
                 cca.getCollaborativeContent().setContentplain(paraText);
-
+                cca.setTypeofdoc("OoOAddon");
                 cca.setQualityCriteria(qc);
 
                 Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
@@ -248,9 +249,9 @@ public final class ContentAnalysisAddOn extends WeakBase
 
                     String ipAddress = null;
                     if (ipAddress == null) {
-
+                        ipAddress="0.0.0.0";
                     }
-                    System.out.println("ipAddress:" + ipAddress);
+                    //System.out.println("ipAddress:" + ipAddress);
 
                     target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id);
                     Response annotatecontent = target.request().header("X-FORWARDED-FOR", ipAddress).get();
@@ -261,7 +262,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                 }
             }
         } catch (Throwable t) {
-            
+            showError(t);
             return null;
             //todo
         }
