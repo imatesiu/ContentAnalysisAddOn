@@ -138,9 +138,11 @@ public final class ContentAnalysisAddOn extends WeakBase
         List<Locale> locales = new ArrayList<Locale>();
         locales.add(new Locale("it-It", "", ""));
         locales.add(new Locale("en-US", "", ""));
+      //  locales.add(new Locale("en-GB", "", ""));
+        locales.add(new Locale("en-UK", "", ""));
         return locales.toArray(new Locale[locales.size()]);
     }
-
+  
     public boolean hasLocale(Locale arg0) {
         return true;
     }
@@ -437,6 +439,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
             XTextDocument m_xTextDocument = (XTextDocument) UnoRuntime.queryInterface(XTextDocument.class, m_xFrame.getController().getModel());
             String text = m_xTextDocument.getText().getString();
+            String filename = m_xFrame.getController().getModel().getURL();
             if (text != null) {
                 if (text.length() > 1) {
                     AnnotatedCollaborativeContentAnalyses TotalACA = CheckText(text);
@@ -452,7 +455,10 @@ public final class ContentAnalysisAddOn extends WeakBase
 
                         PropertyValue[] propVals = new PropertyValue[1];
                         propVals[0] = new PropertyValue();
-                        propVals[0].Name = "FilterName";
+                        if(filename == null){
+                            filename = "_blank";
+                        }
+                        propVals[0].Name = "Content Analysis Report of "+filename;
                         propVals[0].State = PropertyState.DIRECT_VALUE;
                         propVals[0].Handle = -1;
                         // propVals[0].Value = new uno.Any(true); // writer_pdf_Export  ,  swriter: MS Word 97 , HTML (StarWriter) ,*/
@@ -697,7 +703,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         xComponent.dispose();
     }
 
-    private void createAboutDialog() throws com.sun.star.uno.Exception {
+    private synchronized void createAboutDialog() throws com.sun.star.uno.Exception {
         // get the service manager from the component context
         XMultiComponentFactory xMultiComponentFactory = m_xContext.getServiceManager();
         // create the dialog model and set the properties
