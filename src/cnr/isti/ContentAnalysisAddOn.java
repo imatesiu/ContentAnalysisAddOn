@@ -25,10 +25,14 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.PropertyVetoException;
+import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
+import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.Locale;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
@@ -37,10 +41,18 @@ import com.sun.star.linguistic2.SingleProofreadingError;
 import com.sun.star.linguistic2.XLinguServiceEventBroadcaster;
 import com.sun.star.linguistic2.XLinguServiceEventListener;
 import com.sun.star.linguistic2.XProofreader;
+import com.sun.star.table.BorderLine;
+import com.sun.star.table.TableBorder;
+import com.sun.star.table.XCell;
+import com.sun.star.table.XCellRange;
+import com.sun.star.table.XTableRows;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.text.TextMarkupType;
+import com.sun.star.text.XText;
+import com.sun.star.text.XTextContent;
 import com.sun.star.text.XTextDocument;
 import com.sun.star.text.XTextRange;
+import com.sun.star.text.XTextTable;
 import com.sun.star.text.XWordCursor;
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -433,6 +445,44 @@ public final class ContentAnalysisAddOn extends WeakBase
 
         }
     }
+    
+    public static void insertHeadersIntoCell(String sCellName, String sText,
+        XTextTable xTable) throws UnknownPropertyException, PropertyVetoException,
+        com.sun.star.lang.IllegalArgumentException, WrappedTargetException, IndexOutOfBoundsException {
+
+    // Access the XText interface of the cell referred to by sCellName (e.g., A1):
+    XText xCellText = (XText) UnoRuntime.queryInterface(XText.class, xTable.getCellByName(sCellName));
+
+    // Set the text in the cell to sText (e.g., "Nick Name"):
+    xCellText.setString(sText);
+
+    //BACKGROUND COLORS:
+    // Select the table headers and get the cell properties:
+    XCellRange xCellRange = ( XCellRange )UnoRuntime.queryInterface( XCellRange.class, xTable );
+    XCellRange xSelectedCells = xCellRange.getCellRangeByName("A1:E1");
+    XPropertySet xCellProps = (XPropertySet)UnoRuntime.queryInterface(XPropertySet.class, xSelectedCells);
+        // Format the color of the table headers (page 56 and 57):
+    XPropertySet xTableProps = (XPropertySet)UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
+    xCellProps.setPropertyValue("BackColor", new Integer(0x000052));
+
+    // BORDERS:
+    // Define a border line, then assign a color and a width:
+    BorderLine theLine = new BorderLine();
+    theLine.Color = 0x000099;
+    theLine.OuterLineWidth = 1;
+    // Apply the line definition to all cell borders and make them valid:
+    TableBorder bord = new TableBorder();
+    bord.VerticalLine = bord.HorizontalLine =
+            bord.LeftLine = bord.RightLine =
+            bord.TopLine = bord.BottomLine =
+            theLine;
+    bord.IsVerticalLineValid = bord.IsHorizontalLineValid =
+            bord.IsLeftLineValid = bord.IsRightLineValid =
+            bord.IsTopLineValid = bord.IsBottomLineValid =
+            true;
+    xTableProps.setPropertyValue("TableBorder", bord);
+
+}
 
     private synchronized void createReport() {
         try {
@@ -442,9 +492,9 @@ public final class ContentAnalysisAddOn extends WeakBase
             String filename = m_xFrame.getController().getModel().getURL();
             if (text != null) {
                 if (text.length() > 1) {
-                    AnnotatedCollaborativeContentAnalyses TotalACA = CheckText(text);
+                    AnnotatedCollaborativeContentAnalyses TotalACA = new AnnotatedCollaborativeContentAnalyses();//CheckText(text);
 
-                    if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+                 //   if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
                         com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
                         Object oDesktop = xMCF.createInstanceWithContext(
                                 "com.sun.star.frame.Desktop", m_xContext);
@@ -473,7 +523,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                                 = (XTextDocument) UnoRuntime.queryInterface(
                                         XTextDocument.class, oDocToStore);
 
-                        insertReport(xTextDocument, TotalACA, text);
+                        insertTableReport(xTextDocument, TotalACA, text);
 
                         // xTextDocument.getText().setString(docText);
                         // 
@@ -484,7 +534,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             propertyValue[1].Name = "FilterName";
             propertyValue[1].Value = "StarOffice XML (Writer)";
             xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
-                    }
+               //     }
                 }
             }
         } catch (Exception e) {
@@ -494,6 +544,53 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     }
 
+    
+      private void insertTableReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
+       // if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+            com.sun.star.text.XText xText = xTextDocument.getText();
+             // get internal service factory of the document
+              XMultiServiceFactory xWriterFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(
+                  XMultiServiceFactory.class, xTextDocument);
+ 
+              // insert TextTable and get cell text, then manipulate text in cell
+              Object table = xWriterFactory.createInstance("com.sun.star.text.TextTable");
+              
+             /* XTextContent xTextContentTable = (XTextContent)UnoRuntime.queryInterface(
+                 XTextContent.class, table);*/
+              
+              
+              XTextTable xTextTable = (XTextTable)UnoRuntime.queryInterface(
+                  XTextTable.class, table);
+                 
+            
+              xTextTable.initialize(5, 5);
+              xText.insertTextContent(xText.getEnd(), xTextTable, false);
+             insertHeadersIntoCell("A1","Defect Number",xTextTable);
+              insertHeadersIntoCell("B1","Defect",xTextTable);
+               insertHeadersIntoCell("C1","Description",xTextTable);
+             insertHeadersIntoCell("D1","Orginal Text",xTextTable);
+              insertHeadersIntoCell("E1","FeedBack",xTextTable);
+              
+              
+              
+             
+ 
+          /*    XCellRange xCellRange = (XCellRange)UnoRuntime.queryInterface(
+                  XCellRange.class, table);
+             XCell xCell = xCellRange.getCellByPosition(0, 1);
+              XText xCellText = (XText)UnoRuntime.queryInterface(XText.class, xCell);
+              xCellText.setString("Ciao");*/
+              
+        // Change properties of the range.
+        // Accessing a cell range over its position.
+//        XCellRange xCellRangeIntestazione = xCellRange.getCellRangeByName("A1:D1");
+ //XPropertySet xPropSet = (com.sun.star.beans.XPropertySet)
+ //    UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRangeIntestazione);
+ //xPropSet.setPropertyValue("CellBackColor", new Integer(0x8080FF));
+             // manipulateText(xCellText);
+            
+       // }
+      }
     private void insertReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
             com.sun.star.text.XText xText = xTextDocument.getText();
