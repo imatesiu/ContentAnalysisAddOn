@@ -30,6 +30,7 @@ import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
+import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.Locale;
 import com.sun.star.lang.WrappedTargetException;
@@ -59,6 +60,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -546,30 +549,14 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     
       private void insertTableReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
-       // if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
-            com.sun.star.text.XText xText = xTextDocument.getText();
-             // get internal service factory of the document
-              XMultiServiceFactory xWriterFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(
-                  XMultiServiceFactory.class, xTextDocument);
- 
-              // insert TextTable and get cell text, then manipulate text in cell
-              Object table = xWriterFactory.createInstance("com.sun.star.text.TextTable");
-              
-             /* XTextContent xTextContentTable = (XTextContent)UnoRuntime.queryInterface(
-                 XTextContent.class, table);*/
-              
-              
-              XTextTable xTextTable = (XTextTable)UnoRuntime.queryInterface(
-                  XTextTable.class, table);
-                 
+        if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+       for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
+            createTable(xTextDocument,acc);
+       }
             
-              xTextTable.initialize(5, 5);
-              xText.insertTextContent(xText.getEnd(), xTextTable, false);
-             insertHeadersIntoCell("A1","Defect Number",xTextTable);
-              insertHeadersIntoCell("B1","Defect",xTextTable);
-               insertHeadersIntoCell("C1","Description",xTextTable);
-             insertHeadersIntoCell("D1","Orginal Text",xTextTable);
-              insertHeadersIntoCell("E1","FeedBack",xTextTable);
+      }
+            
+             
               
               
               
@@ -591,6 +578,9 @@ public final class ContentAnalysisAddOn extends WeakBase
             
        // }
       }
+      
+    
+      
     private void insertReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
             com.sun.star.text.XText xText = xTextDocument.getText();
@@ -974,6 +964,48 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     private String getLanguage() {
         return "english"; //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void createHeader(XTextTable xTextTable) {
+        try {
+            insertHeadersIntoCell("A1","Defect Number",xTextTable);
+            insertHeadersIntoCell("B1","Defect",xTextTable);
+            insertHeadersIntoCell("C1","Description",xTextTable);
+            insertHeadersIntoCell("D1","Orginal Text",xTextTable);
+            insertHeadersIntoCell("E1","FeedBack",xTextTable);
+        } catch (UnknownPropertyException ex) {
+            Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (PropertyVetoException ex) {
+            Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (WrappedTargetException ex) {
+            Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IndexOutOfBoundsException ex) {
+            Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void createTable(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalysis acc) throws Exception {
+            com.sun.star.text.XText xText = xTextDocument.getText();
+            // get internal service factory of the document
+            XMultiServiceFactory xWriterFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(
+                  XMultiServiceFactory.class, xTextDocument);
+ 
+              // insert TextTable and get cell text, then manipulate text in cell
+            Object table = xWriterFactory.createInstance("com.sun.star.text.TextTable");
+              
+            /* XTextContent xTextContentTable = (XTextContent)UnoRuntime.queryInterface(
+                 XTextContent.class, table);*/
+              
+              
+            XTextTable xTextTable = (XTextTable)UnoRuntime.queryInterface(
+                  XTextTable.class, table);
+                 
+            
+            xTextTable.initialize(5, 5);
+            xText.insertTextContent(xText.getEnd(), xTextTable, false);
+            createHeader(xTextTable);
     }
 
     /**
