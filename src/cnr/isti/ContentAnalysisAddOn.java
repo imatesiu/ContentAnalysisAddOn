@@ -48,6 +48,7 @@ import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
 import com.sun.star.table.XTableRows;
 import com.sun.star.task.XJobExecutor;
+import com.sun.star.text.TableColumnSeparator;
 import com.sun.star.text.TextMarkupType;
 import com.sun.star.text.XText;
 import com.sun.star.text.XTextContent;
@@ -1025,6 +1026,42 @@ public final class ContentAnalysisAddOn extends WeakBase
             xTextTable.initialize(acc.getAnnotations().size()+1, 5);
             xText.insertTextContent(xText.getEnd(), xTextTable, false);
             createHeader(xTextTable);
+            
+            
+            XPropertySet xPS = ( XPropertySet ) UnoRuntime.queryInterface(
+    XPropertySet.class, xTextTable );
+ 
+// Get table Width and TableColumnRelativeSum properties values
+int iWidth = ( Integer ) xPS.getPropertyValue( "Width" );
+short sTableColumnRelativeSum = ( Short ) xPS.getPropertyValue( "TableColumnRelativeSum" );
+ 
+// Calculate conversion ration
+double dRatio = ( double ) sTableColumnRelativeSum / ( double ) iWidth;
+ 
+// Convert our 20 mm (2000) to unknown ( relative ) units
+double dRelativeWidth = ( double ) 2000 * dRatio;
+ 
+// Get table column separators
+Object xObj = xPS.getPropertyValue( "TableColumnSeparators" );
+ 
+TableColumnSeparator[] xSeparators = ( TableColumnSeparator[] )UnoRuntime.queryInterface(
+    TableColumnSeparator[].class, xObj );
+ 
+// Last table column separator position
+double dPosition = sTableColumnRelativeSum - dRelativeWidth;
+ 
+xSeparators[0].Position = (short) 600;
+xSeparators[1].Position = (short) 2200;
+xSeparators[3].Position = (short) 32000;
+// Set set new position for all column separators        
+
+// Do not forget to set TableColumnSeparators back! Otherwise, it doesn't work.
+xPS.setPropertyValue( "TableColumnSeparators", xSeparators );
+            
+            
+            
+            
+            
 
             filltable(xTextDocument, xTextTable,acc,text);
             }
