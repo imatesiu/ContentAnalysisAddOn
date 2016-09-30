@@ -157,7 +157,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         locales.add(new Locale("en-UK", "", ""));
         return locales.toArray(new Locale[locales.size()]);
     }
-  
+
     public boolean hasLocale(Locale arg0) {
         return true;
     }
@@ -448,7 +448,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
         }
     }
-    
+
     public static void insertHeadersIntoCell(String sCellName, String sText,
         XTextTable xTable) throws UnknownPropertyException, PropertyVetoException,
         com.sun.star.lang.IllegalArgumentException, WrappedTargetException, IndexOutOfBoundsException {
@@ -458,7 +458,7 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     // Set the text in the cell to sText (e.g., "Nick Name"):
     xCellText.setString(sText);
-
+    
     //BACKGROUND COLORS:
     // Select the table headers and get the cell properties:
     XCellRange xCellRange = ( XCellRange )UnoRuntime.queryInterface( XCellRange.class, xTable );
@@ -495,9 +495,9 @@ public final class ContentAnalysisAddOn extends WeakBase
             String filename = m_xFrame.getController().getModel().getURL();
             if (text != null) {
                 if (text.length() > 1) {
-                    AnnotatedCollaborativeContentAnalyses TotalACA = new AnnotatedCollaborativeContentAnalyses();//CheckText(text);
+                    AnnotatedCollaborativeContentAnalyses TotalACA = CheckText(text);
 
-                 //   if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+                   if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
                         com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
                         Object oDesktop = xMCF.createInstanceWithContext(
                                 "com.sun.star.frame.Desktop", m_xContext);
@@ -529,7 +529,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                         insertTableReport(xTextDocument, TotalACA, text);
 
                         // xTextDocument.getText().setString(docText);
-                        // 
+                        //
                         /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
             propertyValue[0].Name = "Overwrite";
             propertyValue[0].Value = new Boolean(true);
@@ -537,7 +537,7 @@ public final class ContentAnalysisAddOn extends WeakBase
             propertyValue[1].Name = "FilterName";
             propertyValue[1].Value = "StarOffice XML (Writer)";
             xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
-               //     }
+                   }
                 }
             }
         } catch (Exception e) {
@@ -547,27 +547,47 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     }
 
-    
+
       private void insertTableReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
-       for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
-            createTable(xTextDocument,acc);
-       }
-            
+          for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
+               String Text = acc.getType() + " Risk:\n\r";
+                Text += acc.getOverallQualityMeasure() + " " + acc.getOverallQuality() + " - " + acc.getOverallRecommendations() + "\n\r";
+
+                com.sun.star.text.XText xText = xTextDocument.getText();
+                XTextRange pos = xText.getEnd();
+                xText.insertString(pos, Text, true);
+                XWordCursor xWordCursor
+                        = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
+                                com.sun.star.text.XWordCursor.class, pos);
+
+                // xWordCursor.gotoStart(true);
+                // xWordCursor.gotoEnd(true);
+                // xWordCursor.gotoEndOfWord(true);
+                XPropertySet xPropertySet
+                        = (XPropertySet) UnoRuntime.queryInterface(
+                                XPropertySet.class, xWordCursor);
+                xPropertySet.setPropertyValue("CharWeight",
+                        new Float(com.sun.star.awt.FontWeight.BOLD));
+                xPropertySet.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.NONE);
+                xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));
+                createTable(xTextDocument,acc, text);
+          }
+
       }
-            
-             
-              
-              
-              
-             
- 
+
+
+
+
+
+
+
           /*    XCellRange xCellRange = (XCellRange)UnoRuntime.queryInterface(
                   XCellRange.class, table);
              XCell xCell = xCellRange.getCellByPosition(0, 1);
               XText xCellText = (XText)UnoRuntime.queryInterface(XText.class, xCell);
               xCellText.setString("Ciao");*/
-              
+
         // Change properties of the range.
         // Accessing a cell range over its position.
 //        XCellRange xCellRangeIntestazione = xCellRange.getCellRangeByName("A1:D1");
@@ -575,18 +595,18 @@ public final class ContentAnalysisAddOn extends WeakBase
  //    UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRangeIntestazione);
  //xPropSet.setPropertyValue("CellBackColor", new Integer(0x8080FF));
              // manipulateText(xCellText);
-            
+
        // }
       }
-      
-    
-      
+
+
+
     private void insertReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
             com.sun.star.text.XText xText = xTextDocument.getText();
             for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
                 /* if(acc.getType().equals(acc)){
-                    
+
                 }*/
                 String Text = acc.getType() + " Risk:\n\r";
                 Text += acc.getOverallQualityMeasure() + " " + acc.getOverallQuality() + " - " + acc.getOverallRecommendations() + "\n\r";
@@ -807,7 +827,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory) UnoRuntime.queryInterface(
                 XMultiServiceFactory.class, dialogModel);
 
-       
+
 
         Object buttonModel2 = xMultiServiceFactory.createInstance(
                 "com.sun.star.awt.UnoControlButtonModel");
@@ -840,11 +860,11 @@ public final class ContentAnalysisAddOn extends WeakBase
         XNameContainer xNameCont = (XNameContainer) UnoRuntime.queryInterface(
                 XNameContainer.class, dialogModel);
         this.xNameCont = xNameCont;
-        
+
         xNameCont.insertByName("Cancel", buttonModel2);
         xNameCont.insertByName("Label", labelModel);
 
-        
+
         // create the dialog control and set the model
         Object dialog = xMultiComponentFactory.createInstanceWithContext(
                 "com.sun.star.awt.UnoControlDialog", m_xContext);
@@ -853,7 +873,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         XControlModel xControlModel = (XControlModel) UnoRuntime.queryInterface(
                 XControlModel.class, dialogModel);
         xControl.setModel(xControlModel);
-        
+
 
         // create a peer
         Object toolkit = xMultiComponentFactory.createInstanceWithContext(
@@ -870,7 +890,7 @@ public final class ContentAnalysisAddOn extends WeakBase
         XComponent xComponent = (XComponent) UnoRuntime.queryInterface(XComponent.class, dialog);
         xComponent.dispose();
     }
-    
+
     private XPropertySet createAWTControl(Object objControl, String ctrlName,
             String ctrlCaption, Rectangle posSize) {
 
@@ -912,7 +932,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     public String getImplementationName() {
         return m_implementationName;
     }
-    
+
      private void showError(Throwable e) {
     if (testMode) {
       throw new RuntimeException(e);
@@ -968,11 +988,12 @@ public final class ContentAnalysisAddOn extends WeakBase
 
     private void createHeader(XTextTable xTextTable) {
         try {
-            insertHeadersIntoCell("A1","Defect Number",xTextTable);
+            insertHeadersIntoCell("A1","DNumber",xTextTable);
             insertHeadersIntoCell("B1","Defect",xTextTable);
             insertHeadersIntoCell("C1","Description",xTextTable);
             insertHeadersIntoCell("D1","Orginal Text",xTextTable);
             insertHeadersIntoCell("E1","FeedBack",xTextTable);
+            
         } catch (UnknownPropertyException ex) {
             Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
         } catch (PropertyVetoException ex) {
@@ -986,26 +1007,110 @@ public final class ContentAnalysisAddOn extends WeakBase
         }
     }
 
-    private void createTable(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalysis acc) throws Exception {
+    private void createTable(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalysis acc, String text) throws Exception {
             com.sun.star.text.XText xText = xTextDocument.getText();
             // get internal service factory of the document
             XMultiServiceFactory xWriterFactory = (XMultiServiceFactory)UnoRuntime.queryInterface(
                   XMultiServiceFactory.class, xTextDocument);
- 
+
               // insert TextTable and get cell text, then manipulate text in cell
             Object table = xWriterFactory.createInstance("com.sun.star.text.TextTable");
-              
-            /* XTextContent xTextContentTable = (XTextContent)UnoRuntime.queryInterface(
-                 XTextContent.class, table);*/
-              
-              
+
+
+
             XTextTable xTextTable = (XTextTable)UnoRuntime.queryInterface(
                   XTextTable.class, table);
-                 
-            
-            xTextTable.initialize(5, 5);
+
+            if(acc.getAnnotations().size()>0){
+            xTextTable.initialize(acc.getAnnotations().size()+1, 5);
             xText.insertTextContent(xText.getEnd(), xTextTable, false);
             createHeader(xTextTable);
+
+            filltable(xTextDocument, xTextTable,acc,text);
+            }
+
+    }
+
+    private void filltable(XTextDocument xTextDocument, XTextTable xTextTable, AnnotatedCollaborativeContentAnalysis acc, String text) throws Exception  {
+       int i = 1;
+        XTextContent xTextContentTable = (XTextContent)UnoRuntime.queryInterface(
+                 XTextContent.class, xTextTable);
+       for (Annotation ann : acc.getAnnotations()) {
+
+            XCellRange xCellRange = UnoRuntime.queryInterface(
+                   XCellRange.class, xTextTable);
+           XCell xCell = xCellRange.getCellByPosition(0, i);
+           XText xCellText = UnoRuntime.queryInterface(XText.class, xCell);
+           xCellText.setString(String.valueOf(i));
+                    
+                    String defect = "";
+                    if(ann.getstartNode_Offset()!=null){
+                        Integer s = ann.getstartNode_Offset();
+                        Integer e = ann.getendNode_Offset();
+                        try{
+                            defect = text.substring(s, e);
+                        }catch(Exception error){
+                            showError(error);
+                            defect= "not valid";
+                        }
+                        
+                    }
+                    
+                     xCell = xCellRange.getCellByPosition(1,i);
+                    xCellText = UnoRuntime.queryInterface(XText.class, xCell);
+                    xCellText.setString(defect);
+                    
+                    
+                    String raccomandation = ann.getRecommendation();
+                    //com.sun.star.text.XText xText = xTextDocument.getText();
+                    
+                    xCell = xCellRange.getCellByPosition(2,i);
+                    xCellText = UnoRuntime.queryInterface(XText.class, xCell);
+                    xCellText.setString(raccomandation);
+
+                    if (ann.getStartSentence_Offset() != null) {
+                        Integer s = ann.getStartSentence_Offset();
+                        Integer e = ann.getEndSentence_Offset();
+                        String sentence = "";
+                        try{
+                            sentence = text.substring(s, e);
+                        }catch(Exception error){
+                            showError(error);
+                            sentence= "not valid";
+                        }
+                        
+                    xCell = xCellRange.getCellByPosition(3,i);
+                    xCellText = UnoRuntime.queryInterface(XText.class, xCell);
+                    xCellText.setString(sentence);
+                      /*  XTextRange pos = xText.getEnd();
+                        xText.insertString(pos, sentence+"\n\r", true);*/
+                       /* XWordCursor xWordCursor
+                                = (com.sun.star.text.XWordCursor) UnoRuntime.queryInterface(
+                                        com.sun.star.text.XWordCursor.class, pos);
+                        XPropertySet xPropertySet
+                                = (XPropertySet) UnoRuntime.queryInterface(
+                                        XPropertySet.class, xWordCursor);
+                        xPropertySet.setPropertyValue("CharWeight",
+                                new Float(com.sun.star.awt.FontWeight.DONTKNOW));
+                        xPropertySet.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.NONE);
+                        xPropertySet.setPropertyValue("CharBackColor", new java.lang.Integer(Color.WHITE.getRGB()));*/
+                    }
+
+                 /*   XTextRange pos2 = xText.getEnd();
+                    xText.insertString(pos2, raccomandation + "\n\r", true);
+                    XWordCursor xWordCursor2 = (XWordCursor) UnoRuntime.queryInterface(
+                            XWordCursor.class, pos2);
+
+                    XPropertySet xPropertySet2 = (XPropertySet) UnoRuntime.queryInterface(
+                            XPropertySet.class, xWordCursor2);
+
+                    xPropertySet2.setPropertyValue("CharPosture", com.sun.star.awt.FontSlant.ITALIC);
+                    xPropertySet2.setPropertyValue("CharWeight",
+                            new Float(com.sun.star.awt.FontWeight.DONTKNOW));
+                    xPropertySet2.setPropertyValue("CharBackColor", 0x00FFFF00);*/
+
+                   i++;
+                }
     }
 
     /**
@@ -1076,8 +1181,8 @@ public final class ContentAnalysisAddOn extends WeakBase
             //xDialog.endExecute();
         }
     }
-    
-    
+
+
      static class DialogThread extends Thread {
     private final String text;
 
@@ -1090,5 +1195,5 @@ public final class ContentAnalysisAddOn extends WeakBase
         JOptionPane.showMessageDialog(null, text);
     }
   }
-    
+
 }
