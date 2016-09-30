@@ -1052,7 +1052,7 @@ double dPosition = sTableColumnRelativeSum - dRelativeWidth;
  
 xSeparators[0].Position = (short) 600;
 xSeparators[1].Position = (short) 2200;
-xSeparators[3].Position = (short) 32000;
+//xSeparators[3].Position = (short) 32000;
 // Set set new position for all column separators        
 
 // Do not forget to set TableColumnSeparators back! Otherwise, it doesn't work.
