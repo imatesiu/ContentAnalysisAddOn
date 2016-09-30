@@ -90,6 +90,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     private boolean recheck;
     private static final boolean testMode = true;
     private static final QualityCriteria qc = new QualityCriteria();
+    private String globlalid;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -275,6 +276,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                     Response annotatecontent = target.request().header("X-FORWARDED-FOR", ipAddress).get();
                     AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
                     });
+                    globlalid = id;
                     //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
                     return res;
                 }
@@ -385,6 +387,9 @@ public final class ContentAnalysisAddOn extends WeakBase
                 return this;
             }
 
+            if (aURL.Path.compareTo("ReportFrom") == 0) {
+                return this;
+            } 
             if (aURL.Path.compareTo("About") == 0) {
                 return this;
             }
@@ -424,6 +429,18 @@ public final class ContentAnalysisAddOn extends WeakBase
             }
 
             if (aURL.Path.compareTo("Report") == 0) {
+                // add your own code here
+                System.out.println(aURL.Path);
+                try {
+                    createReport();
+                } catch (Exception e) {
+                    showError(e);
+                    throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
+                }
+                return;
+            }
+            
+            if (aURL.Path.compareTo("ReportFrom") == 0) {
                 // add your own code here
                 System.out.println(aURL.Path);
                 try {
@@ -550,6 +567,10 @@ public final class ContentAnalysisAddOn extends WeakBase
 
 
       private void insertTableReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
+          com.sun.star.text.XText xTextid = xTextDocument.getText();
+          XTextRange posid = xTextid.getEnd();
+          xTextid.insertString(posid, globlalid+"\n\r", true);
+         
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
           for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
                String Text = acc.getType() + " Risk:\n\r";
