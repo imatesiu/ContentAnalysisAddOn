@@ -73,8 +73,28 @@
                             <value xml:lang="it">Crea  Report</value>
                         </prop>
                     </node>
+					
+					 <node oor:name="m4" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>cnr.isti.contentanalysisaddon:ReportFrom</value>
+                        </prop>
+                        <prop oor:name="ImageIdentifier" oor:type="xs:string">
+                            <value/>
+                        </prop>
+                        <prop oor:name="Target" oor:type="xs:string">
+                            <value>_self</value>
+                        </prop>
+                        <prop oor:name="Context" oor:type="xs:string">
+                            <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en">Create Report From...</value>
+                            <value xml:lang="it">Crea  Report da...</value>
+                        </prop>
+                    </node>
                     
-                    <node oor:name="m4" oor:op="replace">
+                    <node oor:name="m5" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>cnr.isti.contentanalysisaddon:About</value>
                         </prop>
@@ -158,6 +178,25 @@
                             <value/>
                             <value xml:lang="en">Create Report</value>
                             <value xml:lang="it">Crea  Report</value>
+                        </prop>
+                    </node>
+					 <node oor:name="m4" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>cnr.isti.contentanalysisaddon:ReportFrom</value>
+                        </prop>
+                        <prop oor:name="ImageIdentifier" oor:type="xs:string">
+                            <value/>
+                        </prop>
+                        <prop oor:name="Target" oor:type="xs:string">
+                            <value>_self</value>
+                        </prop>
+                        <prop oor:name="Context" oor:type="xs:string">
+                            <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en">Create Report From...</value>
+                            <value xml:lang="it">Crea  Report da...</value>
                         </prop>
                     </node>
                 </node>

@@ -1,6 +1,8 @@
 package cnr.isti;
 
 import cnr.isti.xml.data.Annotation;
+import cnr.isti.xml.data.Content;
+import cnr.isti.xml.data.Node;
 import cnr.isti.xml.data.QualityCriteria;
 import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalyses;
 import cnr.isti.xml.data.collaborative.AnnotatedCollaborativeContentAnalysis;
@@ -14,6 +16,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.PropertyState;
@@ -27,6 +30,7 @@ import com.sun.star.linguistic2.ProofreadingResult;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
+import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
@@ -90,6 +94,7 @@ public final class ContentAnalysisAddOn extends WeakBase
     private boolean recheck;
     private static final boolean testMode = true;
     private static final QualityCriteria qc = new QualityCriteria();
+    private String globlalid;
 
     @Override
     public String getServiceDisplayName(Locale locale) {
@@ -225,6 +230,69 @@ public final class ContentAnalysisAddOn extends WeakBase
         return paRes;
     }
 
+    private AnnotatedCollaborativeContentAnalyses resumeText(String id) {
+        try {
+            
+                Client client = ClientBuilder.newClient();
+               /* WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent");
+
+                CollaborativeContentAnalysis cca = new CollaborativeContentAnalysis();
+                cca.setLanguage(this.getLanguage());
+
+                cca.setCollaborativeContent(new CollaborativeContent(String.valueOf(this.getId()), this.getTitle()));
+                cca.getCollaborativeContent().setContentplain(paraText);
+                cca.setTypeofdoc("OoOAddon");
+                cca.setQualityCriteria(qc);
+
+                Entity<CollaborativeContentAnalysis> entity = Entity.entity(cca, MediaType.APPLICATION_XML);
+                //GenericEntity<JAXBElement<CollaborativeContentAnalysis>> gw = new GenericEntity<JAXBElement<CollaborativeContentAnalysis>>(cca){};
+                Response response = target.request(MediaType.APPLICATION_XML).post(entity);
+*/
+                
+
+                
+                
+
+                WebTarget target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id + "/status");
+                String status = "";
+                while (!status.equals("OK")) {
+
+                    status = target.request().get(String.class);
+
+                    //this.setStatus(status);
+                    if (status.equals("ERROR")) {
+                        break;
+                    }
+                }
+                //log.trace("Status: "+status);
+
+                if (status.equals("OK")) {
+
+                    String ipAddress = null;
+                    if (ipAddress == null) {
+                        ipAddress="0.0.0.0";
+                    }
+                    //System.out.println("ipAddress:" + ipAddress);
+
+                    target = client.target("http://contentanalysis.isti.cnr.it:8080").path("lp-content-analysis/learnpad/ca/bridge/validatecollaborativecontent/" + id);
+                    Response annotatecontent = target.request().header("X-FORWARDED-FOR", ipAddress).get();
+                    AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
+                    });
+                    globlalid = id;
+                    //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
+                    getText(res);
+                    return res;
+                }
+            
+        } catch (Throwable t) {
+            showError(t);
+            return null;
+            //todo
+        }
+        return null;
+    }
+    
+    
     private AnnotatedCollaborativeContentAnalyses CheckText(String paraText) {
         try {
             if (paraText.length() > 1) {
@@ -275,6 +343,7 @@ public final class ContentAnalysisAddOn extends WeakBase
                     Response annotatecontent = target.request().header("X-FORWARDED-FOR", ipAddress).get();
                     AnnotatedCollaborativeContentAnalyses res = annotatecontent.readEntity(new GenericType<AnnotatedCollaborativeContentAnalyses>() {
                     });
+                    globlalid = id;
                     //this.setCollectionannotatedcontent(res.getAnnotateCollaborativeContentAnalysis());
                     return res;
                 }
@@ -385,6 +454,9 @@ public final class ContentAnalysisAddOn extends WeakBase
                 return this;
             }
 
+            if (aURL.Path.compareTo("ReportFrom") == 0) {
+                return this;
+            } 
             if (aURL.Path.compareTo("About") == 0) {
                 return this;
             }
@@ -428,6 +500,19 @@ public final class ContentAnalysisAddOn extends WeakBase
                 System.out.println(aURL.Path);
                 try {
                     createReport();
+                } catch (Exception e) {
+                    showError(e);
+                    throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
+                }
+                return;
+            }
+            
+            if (aURL.Path.compareTo("ReportFrom") == 0) {
+                // add your own code here
+                System.out.println(aURL.Path);
+                try {
+                    
+                    createReportFrom();
                 } catch (Exception e) {
                     showError(e);
                     throw new com.sun.star.lang.WrappedTargetRuntimeException(e.getMessage(), this, e);
@@ -550,6 +635,10 @@ public final class ContentAnalysisAddOn extends WeakBase
 
 
       private void insertTableReport(XTextDocument xTextDocument, AnnotatedCollaborativeContentAnalyses TotalACA, String text) throws Exception {
+          com.sun.star.text.XText xTextid = xTextDocument.getText();
+          XTextRange posid = xTextid.getEnd();
+          xTextid.insertString(posid, globlalid+"\n\r", true);
+         
         if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
           for (AnnotatedCollaborativeContentAnalysis acc : TotalACA.getAnnotateCollaborativeContentAnalysis()) {
                String Text = acc.getType() + " Risk:\n\r";
@@ -1150,6 +1239,233 @@ xPS.setPropertyValue( "TableColumnSeparators", xSeparators );
                 }
     }
 
+    private void createReportFrom() throws com.sun.star.uno.Exception {
+         // get the service manager from the component context
+        XMultiComponentFactory xMultiComponentFactory = m_xContext.getServiceManager();
+        // create the dialog model and set the properties
+        Object dialogModel = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialogModel", m_xContext);
+        XPropertySet xPSetDialog = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, dialogModel);
+        xPSetDialog.setPropertyValue("PositionX", new Integer(100));
+        xPSetDialog.setPropertyValue("PositionY", new Integer(100));
+        xPSetDialog.setPropertyValue("Width", new Integer(150));
+        xPSetDialog.setPropertyValue("Height", new Integer(100));
+        xPSetDialog.setPropertyValue("Title", new String("CA Configuration"));
+        // get the service manager from the dialog model
+        XMultiServiceFactory xMultiServiceFactory = (XMultiServiceFactory) UnoRuntime.queryInterface(
+                XMultiServiceFactory.class, dialogModel);
+
+        // create the button model and set the properties
+        Object buttonModel = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet xPSetButton = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, buttonModel);
+        xPSetButton.setPropertyValue("PositionX", new Integer(90));
+        xPSetButton.setPropertyValue("PositionY", new Integer(80));
+        xPSetButton.setPropertyValue("Width", new Integer(50));
+        xPSetButton.setPropertyValue("Height", new Integer(14));
+        xPSetButton.setPropertyValue("Name", "INVIO");
+        xPSetButton.setPropertyValue("TabIndex", new Short((short) 0));
+        xPSetButton.setPropertyValue("Label", new String("OK"));
+
+        Object buttonModel2 = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet xPSetButton2 = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, buttonModel2);
+        xPSetButton2.setPropertyValue("PositionX", new Integer(5));
+        xPSetButton2.setPropertyValue("PositionY", new Integer(80));
+        xPSetButton2.setPropertyValue("Width", new Integer(50));
+        xPSetButton2.setPropertyValue("Height", new Integer(14));
+        xPSetButton2.setPropertyValue("Name", "Cancel");
+        xPSetButton2.setPropertyValue("TabIndex", new Short((short) 0));
+        xPSetButton2.setPropertyValue("Label", new String("Cancel"));
+        xPSetButton2.setPropertyValue("PushButtonType", new Short((short) PushButtonType.CANCEL_value));
+
+        // create the label model and set the properties
+        Object labelModel = xMultiServiceFactory.createInstance(
+                "com.sun.star.awt.UnoControlFixedTextModel");
+        XPropertySet xPSetLabel = (XPropertySet) UnoRuntime.queryInterface(
+                XPropertySet.class, labelModel);
+        xPSetLabel.setPropertyValue("PositionX", new Integer(5));
+        xPSetLabel.setPropertyValue("PositionY", new Integer(5));
+        xPSetLabel.setPropertyValue("Width", new Integer(100));
+        xPSetLabel.setPropertyValue("Height", new Integer(14));
+        xPSetLabel.setPropertyValue("Name", "LABEL");
+        xPSetLabel.setPropertyValue("TabIndex", new Short((short) 1));
+        xPSetLabel.setPropertyValue("Label", "Insert ID for analysis:");
+        
+        
+        Object oTFModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlEditModel");
+        XMultiPropertySet xTFModelMPSet = (XMultiPropertySet) UnoRuntime.queryInterface(XMultiPropertySet.class, oTFModel);
+ 
+      // Set the properties at the model - keep in mind to pass the property names in alphabetical order! 
+      xTFModelMPSet.setPropertyValues(
+      new String[] {"Height", "Name", "PositionX", "PositionY", "Text", "Width"},
+      new Object[] { new Integer(12), "ID", new Integer(5), new Integer(15), "insert id", new Integer(100)});
+ 
+        
+        
+        
+        
+        
+        // insert the control models into the dialog model
+        XNameContainer xNameCont = (XNameContainer) UnoRuntime.queryInterface(
+                XNameContainer.class, dialogModel);
+        this.xNameCont = xNameCont;
+        xNameCont.insertByName("INVIO", buttonModel);
+        xNameCont.insertByName("Cancel", buttonModel2);
+        xNameCont.insertByName("Label", labelModel);
+        xNameCont.insertByName("ID", oTFModel);
+        
+        //xNameCont.insertByName("Completeness", checkboxModel);
+        // create the dialog control and set the model
+        Object dialog = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialog", m_xContext);
+        XControl xControl = (XControl) UnoRuntime.queryInterface(
+                XControl.class, dialog);
+        XControlModel xControlModel = (XControlModel) UnoRuntime.queryInterface(
+                XControlModel.class, dialogModel);
+        xControl.setModel(xControlModel);
+        // add an action listener to the button control
+        XControlContainer xControlCont = (XControlContainer) UnoRuntime.queryInterface(
+                XControlContainer.class, dialog);
+        Object objectButton = xControlCont.getControl("INVIO");
+        XButton xButton = (XButton) UnoRuntime.queryInterface(XButton.class, objectButton);
+        xButton.addActionListener(new ActionListenerImplFrom(xControlCont));
+
+        // create a peer
+        Object toolkit = xMultiComponentFactory.createInstanceWithContext(
+                "com.sun.star.awt.Toolkit", m_xContext);
+        XToolkit xToolkit = (XToolkit) UnoRuntime.queryInterface(XToolkit.class, toolkit);
+        XWindow xWindow = (XWindow) UnoRuntime.queryInterface(XWindow.class, xControl);
+        xWindow.setVisible(false);
+        xControl.createPeer(xToolkit, null);
+        // execute the dialog
+        XDialog xDialog = (XDialog) UnoRuntime.queryInterface(XDialog.class, dialog);
+        xDialog.execute();
+
+        // dispose the dialog
+        XComponent xComponent = (XComponent) UnoRuntime.queryInterface(XComponent.class, dialog);
+        xComponent.dispose();
+    }
+
+    private void getText(AnnotatedCollaborativeContentAnalyses res) {
+        if(!res.getAnnotateCollaborativeContentAnalysis().isEmpty()){
+            AnnotatedCollaborativeContentAnalysis AnnotateContent = res.getAnnotateCollaborativeContentAnalysis().get(0);
+            String content = exContent(AnnotateContent.getCollaborativeContent().getContent());
+            res.setText(content);
+        }
+         res.setText(new String());
+    }
+    
+    private String exContent(Content c) {
+		String content = new String(); 
+		
+		if(c!=null){
+			for(Object obj : c.getContent()) {
+				if(!(obj instanceof Node)){
+					content+=obj.toString();
+					
+				
+				}
+			}
+			
+		}
+		return content;
+	}
+
+    
+    public class ActionListenerImplFrom implements com.sun.star.awt.XActionListener {
+
+        private int _nCounts = 0;
+        private XControlContainer _xControlCont;
+
+        public ActionListenerImplFrom(XControlContainer xControlCont) {
+            _xControlCont = xControlCont;
+        }
+
+        // XEventListener
+        public void disposing(EventObject eventObject) {
+            _xControlCont = null;
+        }
+
+        // XActionListener
+        public void actionPerformed(ActionEvent actionEvent) {
+            // increase click counter
+            _nCounts++;
+
+            // set label text
+            // Object label = _xControlCont.getControl("Label");
+            // XFixedText xLabel = (XFixedText) UnoRuntime.queryInterface(XFixedText.class, label);
+            // xLabel.setText("labelprefix" + _nCounts);
+            XControl xTFControl = _xControlCont.getControl("ID");
+          
+            XTextComponent xTextComponent = (XTextComponent) UnoRuntime.queryInterface(XTextComponent.class, xTFControl);
+
+          
+
+            if ( xTextComponent.getText().length() > 0) {
+                  String ID = xTextComponent.getText();
+                  AnnotatedCollaborativeContentAnalyses TotalACA = resumeText(ID);
+                  String text = TotalACA.getText();
+                   if (!TotalACA.getAnnotateCollaborativeContentAnalysis().isEmpty()) {
+                      try {
+                          com.sun.star.lang.XMultiComponentFactory xMCF = m_xContext.getServiceManager();
+                          Object oDesktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", m_xContext);
+                          com.sun.star.frame.XComponentLoader xCompLoader
+                                  = (com.sun.star.frame.XComponentLoader) UnoRuntime.queryInterface(
+                                          com.sun.star.frame.XComponentLoader.class, oDesktop);
+                          String url = "private:factory/swriter";
+                          
+                          PropertyValue[] propVals = new PropertyValue[1];
+                          propVals[0] = new PropertyValue();
+                          
+                          String   filename = "_blank";
+                          
+                          propVals[0].Name = "Content Analysis Report of "+filename;
+                          propVals[0].State = PropertyState.DIRECT_VALUE;
+                          propVals[0].Handle = -1;
+                          // propVals[0].Value = new uno.Any(true); // writer_pdf_Export  ,  swriter: MS Word 97 , HTML (StarWriter) ,*/
+                          
+                          // PropertyValue propertyValue[] = new PropertyValue[2];
+                          XComponent oDocToStore = xCompLoader.loadComponentFromURL(url, "_blank", 0, propVals);
+                          /*com.sun.star.frame.XStorable xStorable
+                          = (com.sun.star.frame.XStorable) UnoRuntime.queryInterface(
+                          com.sun.star.frame.XStorable.class, oDocToStore);*/
+                          XTextDocument xTextDocument
+                                  = (XTextDocument) UnoRuntime.queryInterface(
+                                          XTextDocument.class, oDocToStore);
+                          
+                          insertTableReport(xTextDocument, TotalACA, text);
+                          
+                          // xTextDocument.getText().setString(docText);
+                          //
+                          /* propertyValue[0] = new com.sun.star.beans.PropertyValue();
+                          propertyValue[0].Name = "Overwrite";
+                          propertyValue[0].Value = new Boolean(true);
+                          propertyValue[1] = new com.sun.star.beans.PropertyValue();
+                          propertyValue[1].Name = "FilterName";
+                          propertyValue[1].Value = "StarOffice XML (Writer)";
+                          xStorable.storeAsURL( sSaveUrl.toString(), propertyValue );*/
+                      } catch (Exception ex) {
+                          Logger.getLogger(ContentAnalysisAddOn.class.getName()).log(Level.SEVERE, null, ex);
+                      }
+                   }
+            } else {
+                
+            }
+
+
+            XDialog xDialog = (XDialog) UnoRuntime.queryInterface(
+                    XDialog.class, xTFControl.getContext());
+
+            // Close the dialog
+            xDialog.endExecute();
+            //xDialog.endExecute();
+        }
+    }
+    
     /**
      * action listener
      */

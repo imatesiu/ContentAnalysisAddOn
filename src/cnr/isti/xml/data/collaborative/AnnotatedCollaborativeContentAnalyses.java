@@ -34,6 +34,8 @@ public class AnnotatedCollaborativeContentAnalyses implements Serializable{
             
         }
 	
+        @XmlTransient
+	private String text;
         
 	@XmlTransient
 	private static final long serialVersionUID = 8605819018990855517L;
@@ -61,6 +63,14 @@ public class AnnotatedCollaborativeContentAnalyses implements Serializable{
 
 	public String getDate() {
 		return date;
+	}
+        
+        public String getText() {
+		return text;
+	}
+        
+        public void setText(String Text) {
+		text= Text;
 	}
 
 
